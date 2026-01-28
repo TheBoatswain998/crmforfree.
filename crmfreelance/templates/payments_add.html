@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('add_payment') }}</h1>
+
+  <form method="post">
+    <label>{{ t('project') }}:<br>
+      <select name="project_id" required>
+        <option value="">{{ t('select_project') }}</option>
+        {% for p in projects %}
+          <option value="{{ p['id'] }}">{{ p['title'] }}{% if p['client_name'] %} ({{ p['client_name'] }}){% endif %}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('amount') }}:<br>
+      <input type="number" step="0.01" name="amount" required>
+    </label>
+    <br><br>
+    <label>{{ t('status') }}:<br>
+      <select name="status">
+        <option value="pending">pending</option>
+        <option value="partial">partial</option>
+        <option value="paid">paid</option>
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('due_date') }}:<br>
+      <input type="date" name="due_date">
+    </label>
+    <br><br>
+    <label>{{ t('comment') }}:<br>
+      <textarea name="comment" rows="4" cols="40"></textarea>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('add') }}</button>
+    <a href="/payments" style="margin-left:10px;">{{ t('cancel') }}</a>
+  </form>
+{% endblock %}

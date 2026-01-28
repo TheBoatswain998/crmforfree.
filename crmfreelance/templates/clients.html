@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('clients') }}</h1>
+
+  <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
+    <a href="{{ url_for('clients_add') }}">{{ t('add_client') }}</a>
+    <span>|</span>
+    <form method="post" action="{{ url_for('clients_import') }}" enctype="multipart/form-data" style="display:inline-flex;gap:8px;align-items:center;">
+      <input type="file" name="csv_file" accept=".csv" required>
+      <button type="submit">{{ t('import_csv') }}</button>
+    </form>
+  </div>
+
+  <style>
+    .clients-table {width:100%;border-collapse:collapse}
+    .clients-table th, .clients-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
+    .badge {display:inline-block;padding:4px 8px;border-radius:12px;color:#fff;font-size:0.9em}
+    .badge.active {background:#28a745}
+    .badge.cold {background:#6c757d}
+    .badge.archived {background:#6f42c1}
+  </style>
+
+  {% if not clients %}
+    <p>{{ t('no_clients') }}</p>
+  {% else %}
+    <table class="clients-table">
+      <thead>
+        <tr>
+          <th>{{ t('name') }}</th>
+          <th>{{ t('email') }}</th>
+          <th>{{ t('status') }}</th>
+          <th>{{ t('last_contact') }}</th>
+          <th>{{ t('actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in clients %}
+          <tr>
+            <td>{{ c['name'] }}</td>
+            <td>{{ c['email'] or '-' }}</td>
+            <td><span class="badge {{ c['status'] }}">{{ c['status'] }}</span></td>
+            <td>{{ c['last_contact'] or '-' }}</td>
+            <td>
+              <a href="{{ url_for('clients_edit', client_id=c['id']) }}">{{ t('edit') }}</a>
+              <form method="post" action="{{ url_for('clients_delete', client_id=c['id']) }}" style="display:inline;margin-left:8px;">
+                <button type="submit" onclick="return confirm('{{ t('confirm_delete_client') }}')">{{ t('delete') }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

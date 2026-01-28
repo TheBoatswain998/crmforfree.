@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('projects') }}</h1>
+
+  <p><a href="{{ url_for('projects_add') }}">{{ t('add_project') }}</a></p>
+
+  <style>
+    .projects-table {width:100%;border-collapse:collapse}
+    .projects-table th, .projects-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
+  </style>
+
+  {% if not projects %}
+    <p>{{ t('no_projects') }}</p>
+  {% else %}
+    <table class="projects-table">
+      <thead>
+        <tr>
+          <th>{{ t('title') }}</th>
+          <th>{{ t('client') }}</th>
+          <th>{{ t('status') }}</th>
+          <th>{{ t('budget') }}</th>
+          <th>{{ t('deadline') }}</th>
+          <th>{{ t('actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in projects %}
+          <tr>
+            <td>{{ p['title'] }}</td>
+            <td>{{ p['client_name'] or '-' }}</td>
+            <td>{{ p['status'] }}</td>
+            <td>{{ p['budget'] or '-' }}</td>
+            <td>{{ p['deadline'] or '-' }}</td>
+            <td>
+              <a href="{{ url_for('projects_edit', project_id=p['id']) }}">{{ t('edit') }}</a>
+              <form method="post" action="{{ url_for('projects_delete', project_id=p['id']) }}" style="display:inline;margin-left:8px;">
+                <button type="submit" onclick="return confirm('{{ t('confirm_delete_project') }}')">{{ t('delete') }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

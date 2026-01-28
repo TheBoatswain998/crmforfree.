@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('login') }}</h1>
+
+  <form method="post">
+    <label>{{ t('email') }}:<br>
+      <input type="email" name="email" required>
+    </label>
+    <br><br>
+    <label>{{ t('password') }}:<br>
+      <input type="password" name="password" required>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('login') }}</button>
+  </form>
+
+  <p><a href="/register">{{ t('register') }}</a></p>
+{% endblock %}

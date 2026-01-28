@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('add_project') }}</h1>
+
+  <form method="post">
+    <label>{{ t('title') }}:<br>
+      <input type="text" name="title" required>
+    </label>
+    <br><br>
+    <label>{{ t('client') }}:<br>
+      <select name="client_id">
+        <option value="">{{ t('no_client') }}</option>
+        {% for c in clients %}
+          <option value="{{ c['id'] }}">{{ c['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('status') }}:<br>
+      <select name="status">
+        <option value="discussion">discussion</option>
+        <option value="in_progress">in_progress</option>
+        <option value="paused">paused</option>
+        <option value="completed">completed</option>
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('budget') }}:<br>
+      <input type="number" step="0.01" name="budget">
+    </label>
+    <br><br>
+    <label>{{ t('deadline') }}:<br>
+      <input type="date" name="deadline">
+    </label>
+    <br><br>
+    <label>{{ t('description') }}:<br>
+      <textarea name="description" rows="4" cols="40"></textarea>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('add') }}</button>
+    <a href="/projects" style="margin-left:10px;">{{ t('cancel') }}</a>
+  </form>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('payments') }}</h1>
+
+  <p><a href="{{ url_for('payments_add') }}">{{ t('add_payment') }}</a></p>
+
+  <style>
+    .payments-table {width:100%;border-collapse:collapse}
+    .payments-table th, .payments-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
+    .badge {display:inline-block;padding:4px 8px;border-radius:12px;color:#fff;font-size:0.9em}
+    .badge.pending {background:#ffc107;color:#000}
+    .badge.partial {background:#17a2b8}
+    .badge.paid {background:#28a745}
+  </style>
+
+  {% if not payments %}
+    <p>{{ t('no_payments') }}</p>
+  {% else %}
+    <table class="payments-table">
+      <thead>
+        <tr>
+          <th>{{ t('project') }}</th>
+          <th>{{ t('client') }}</th>
+          <th>{{ t('amount') }}</th>
+          <th>{{ t('status') }}</th>
+          <th>{{ t('due_date') }}</th>
+          <th>{{ t('comment') }}</th>
+          <th>{{ t('actions') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in payments %}
+          <tr>
+            <td>{{ p['project_title'] or '-' }}</td>
+            <td>{{ p['client_name'] or '-' }}</td>
+            <td>{{ p['amount'] }}</td>
+            <td><span class="badge {{ p['status'] }}">{{ p['status'] }}</span></td>
+            <td>{{ p['due_date'] or '-' }}</td>
+            <td>{{ p['comment'] or '-' }}</td>
+            <td>
+              <form method="post" action="{{ url_for('payments_delete', payment_id=p['id']) }}" style="display:inline;">
+                <button type="submit" onclick="return confirm('{{ t('confirm_delete_payment') }}')">{{ t('delete') }}</button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

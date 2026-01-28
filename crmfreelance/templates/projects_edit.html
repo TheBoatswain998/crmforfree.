@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('edit_project') }}</h1>
+
+  <form method="post">
+    <label>{{ t('title') }}:<br>
+      <input type="text" name="title" value="{{ project['title'] }}" required>
+    </label>
+    <br><br>
+    <label>{{ t('client') }}:<br>
+      <select name="client_id">
+        <option value="">{{ t('no_client') }}</option>
+        {% for c in clients %}
+          <option value="{{ c['id'] }}" {% if project['client_id'] == c['id'] %}selected{% endif %}>{{ c['name'] }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('status') }}:<br>
+      <select name="status">
+        <option value="discussion" {% if project['status'] == 'discussion' %}selected{% endif %}>discussion</option>
+        <option value="in_progress" {% if project['status'] == 'in_progress' %}selected{% endif %}>in_progress</option>
+        <option value="paused" {% if project['status'] == 'paused' %}selected{% endif %}>paused</option>
+        <option value="completed" {% if project['status'] == 'completed' %}selected{% endif %}>completed</option>
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('budget') }}:<br>
+      <input type="number" step="0.01" name="budget" value="{{ project['budget'] or '' }}">
+    </label>
+    <br><br>
+    <label>{{ t('deadline') }}:<br>
+      <input type="date" name="deadline" value="{{ project['deadline'] or '' }}">
+    </label>
+    <br><br>
+    <label>{{ t('description') }}:<br>
+      <textarea name="description" rows="4" cols="40">{{ project['description'] or '' }}</textarea>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('save') }}</button>
+    <a href="/projects" style="margin-left:10px;">{{ t('cancel') }}</a>
+  </form>
+{% endblock %}

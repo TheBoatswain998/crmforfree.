@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('register') }}</h1>
+
+  <form method="post">
+    <label>{{ t('name') }}:<br>
+      <input type="text" name="name" required>
+    </label>
+    <br><br>
+    <label>{{ t('email') }}:<br>
+      <input type="email" name="email" required>
+    </label>
+    <br><br>
+    <label>{{ t('password') }}:<br>
+      <input type="password" name="password" required>
+    </label>
+    <br><br>
+    <label>{{ t('confirm_password') }}:<br>
+      <input type="password" name="confirm" required>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('register') }}</button>
+  </form>
+
+  <p><a href="/login">{{ t('login') }}</a></p>
+{% endblock %}

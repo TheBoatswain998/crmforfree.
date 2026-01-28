@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('add_client') }}</h1>
+
+  <form method="post">
+    <label>{{ t('name') }}:<br>
+      <input type="text" name="name" required>
+    </label>
+    <br><br>
+    <label>{{ t('email') }}:<br>
+      <input type="email" name="email" required>
+    </label>
+    <br><br>
+    <label>{{ t('contact') }}:<br>
+      <input type="text" name="contact">
+    </label>
+    <br><br>
+    <label>{{ t('status') }}:<br>
+      <select name="status">
+        <option value="active">active</option>
+        <option value="cold">cold</option>
+        <option value="archived">archived</option>
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('notes') }}:<br>
+      <textarea name="notes" rows="4" cols="40"></textarea>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('add') }}</button>
+    <a href="/clients" style="margin-left:10px;">{{ t('cancel') }}</a>
+  </form>
+{% endblock %}

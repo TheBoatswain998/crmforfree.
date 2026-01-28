@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('hello') }}, {{ current_user.name }}!</h1>
+
+  <style>
+    .dashboard-cards {display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
+    .card {background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:20px;min-width:200px;flex:1}
+    .card h3 {margin:0 0 10px 0;color:#495057;font-size:0.9em;text-transform:uppercase}
+    .card .value {font-size:2em;font-weight:bold;color:#212529}
+    .card .value.money {color:#28a745}
+    .deadlines-table {width:100%;border-collapse:collapse;margin-top:10px}
+    .deadlines-table th, .deadlines-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
+    .deadlines-table th {background:#f8f9fa;font-size:0.85em;text-transform:uppercase;color:#6c757d}
+  </style>
+
+  <div class="dashboard-cards">
+    <div class="card">
+      <h3>{{ t('active_clients') }}</h3>
+      <div class="value">{{ active_clients }}</div>
+    </div>
+    <div class="card">
+      <h3>{{ t('pending_payments') }}</h3>
+      <div class="value money">{{ "%.2f"|format(pending_amount) }}</div>
+    </div>
+  </div>
+
+  <h2>{{ t('upcoming_deadlines') }}</h2>
+  {% if upcoming_deadlines %}
+    <table class="deadlines-table">
+      <thead>
+        <tr>
+          <th>{{ t('project') }}</th>
+          <th>{{ t('client') }}</th>
+          <th>{{ t('deadline') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in upcoming_deadlines %}
+          <tr>
+            <td>{{ d['title'] }}</td>
+            <td>{{ d['client_name'] or '-' }}</td>
+            <td>{{ d['deadline'] }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p>{{ t('no_deadlines') }}</p>
+  {% endif %}
+{% endblock %}

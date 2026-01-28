@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <title>Micro-CRM</title>
+</head>
+<body>
+  <header style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f2f2f2;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <strong>Micro-CRM</strong>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+      <div style="font-size:0.85em;">
+        <a href="/lang/en" style="{% if lang == 'en' %}font-weight:bold{% endif %}">EN</a> |
+        <a href="/lang/ru" style="{% if lang == 'ru' %}font-weight:bold{% endif %}">RU</a>
+      </div>
+      <nav>
+        <ul class="nav" style="display:flex;gap:12px;list-style:none;padding:0;margin:0;">
+          <li class="{% if request.path == '/dashboard' %}active{% endif %}"><a href="/dashboard">{{ t('dashboard') }}</a></li>
+          <li class="{% if request.path.startswith('/clients') %}active{% endif %}"><a href="/clients">{{ t('clients') }}</a></li>
+          <li class="{% if request.path.startswith('/projects') %}active{% endif %}"><a href="/projects">{{ t('projects') }}</a></li>
+          <li class="{% if request.path.startswith('/payments') %}active{% endif %}"><a href="/payments">{{ t('payments') }}</a></li>
+          <li><a href="/export">{{ t('export') }}</a></li>
+          <li><a href="/logout">{{ t('logout') }}</a></li>
+        </ul>
+      </nav>
+      <style>
+        .nav li a{display:inline-block;padding:8px 12px;text-decoration:none;color:#222;border-radius:4px;}
+        .nav li a:hover{background:#e6f0ff;color:#0645ad}
+        .nav li.active a{background:#d8e8ff;color:#0645ad;font-weight:600}
+      </style>
+    </div>
+  </header>
+
+  <main style="padding:20px;">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <ul style="color:#c00;margin-bottom:15px;list-style:none;padding:0;">
+        {% for m in messages %}
+          <li>{{ m }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

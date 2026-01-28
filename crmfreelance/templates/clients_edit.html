@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>{{ t('edit_client') }}</h1>
+
+  <form method="post">
+    <label>{{ t('name') }}:<br>
+      <input type="text" name="name" value="{{ client['name'] }}" required>
+    </label>
+    <br><br>
+    <label>{{ t('email') }}:<br>
+      <input type="email" name="email" value="{{ client['email'] or '' }}" required>
+    </label>
+    <br><br>
+    <label>{{ t('contact') }}:<br>
+      <input type="text" name="contact" value="{{ client['contact'] or '' }}">
+    </label>
+    <br><br>
+    <label>{{ t('status') }}:<br>
+      <select name="status">
+        <option value="active" {% if client['status'] == 'active' %}selected{% endif %}>active</option>
+        <option value="cold" {% if client['status'] == 'cold' %}selected{% endif %}>cold</option>
+        <option value="archived" {% if client['status'] == 'archived' %}selected{% endif %}>archived</option>
+      </select>
+    </label>
+    <br><br>
+    <label>{{ t('notes') }}:<br>
+      <textarea name="notes" rows="4" cols="40">{{ client['notes'] or '' }}</textarea>
+    </label>
+    <br><br>
+    <button type="submit">{{ t('save') }}</button>
+    <a href="/clients" style="margin-left:10px;">{{ t('cancel') }}</a>
+  </form>
+{% endblock %}
