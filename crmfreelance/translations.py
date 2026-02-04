@@ -47,6 +47,9 @@ TRANSLATIONS = {
         'delete': 'Delete',
         'save': 'Save',
         'cancel': 'Cancel',
+        'send': 'Send',
+        'complete': 'Complete',
+        'mark_paid': 'Mark as Paid',
         
         # Dashboard
         'active_clients': 'Active Clients',
@@ -92,8 +95,10 @@ TRANSLATIONS = {
         'project_added': 'Project added',
         'project_updated': 'Project updated',
         'project_deleted': 'Project deleted',
+        'project_completed': 'Project marked as completed',
         'payment_added': 'Payment added',
         'payment_deleted': 'Payment deleted',
+        'payment_marked_paid': 'Payment marked as paid',
         
         # Error messages
         'db_error': 'Database error',
@@ -127,6 +132,13 @@ TRANSLATIONS = {
         'client_name': 'Client Name',
         'project_name': 'Project Name',
         'payment_status': 'Payment Status',
+        
+        # Feedback/Support
+        'need_help': 'Need help? I\'m here — Pavel',
+        'feedback_placeholder': 'Your feedback...',
+        'describe_issue': 'Describe your issue...',
+        'optional': 'optional',
+        'sent': 'Sent',
     },
     
     'ru': {
@@ -172,6 +184,9 @@ TRANSLATIONS = {
         'delete': 'Удалить',
         'save': 'Сохранить',
         'cancel': 'Отмена',
+        'send': 'Отправить',
+        'complete': 'Завершить',
+        'mark_paid': 'Отметить оплаченным',
         
         # Dashboard
         'active_clients': 'Активные клиенты',
@@ -217,8 +232,10 @@ TRANSLATIONS = {
         'project_added': 'Проект добавлен',
         'project_updated': 'Проект обновлён',
         'project_deleted': 'Проект удалён',
+        'project_completed': 'Проект отмечен как завершённый',
         'payment_added': 'Платёж добавлен',
         'payment_deleted': 'Платёж удалён',
+        'payment_marked_paid': 'Платёж отмечен как оплаченный',
         
         # Error messages
         'db_error': 'Ошибка базы данных',
@@ -252,6 +269,13 @@ TRANSLATIONS = {
         'client_name': 'Имя клиента',
         'project_name': 'Название проекта',
         'payment_status': 'Статус оплаты',
+        
+        # Feedback/Support
+        'need_help': 'Нужна помощь? Я здесь — Павел',
+        'feedback_placeholder': 'Ваш отзыв...',
+        'describe_issue': 'Опишите проблему...',
+        'optional': 'опционально',
+        'sent': 'Отправлено',
     }
 }
 

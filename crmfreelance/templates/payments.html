@@ -1,51 +1,83 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('payments') }}</h1>
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="icon-dollar-sign text-blue-600 dark:text-blue-400"></i>
+        {{ t('payments') }}
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Monitor your income and invoices</p>
+    </div>
+    <a href="{{ url_for('payments_add') }}" class="btn-primary flex items-center gap-2">
+      <i class="icon-plus"></i>
+      <span>{{ t('add_payment') }}</span>
+    </a>
+  </div>
 
-  <p><a href="{{ url_for('payments_add') }}">{{ t('add_payment') }}</a></p>
-
-  <style>
-    .payments-table {width:100%;border-collapse:collapse}
-    .payments-table th, .payments-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
-    .badge {display:inline-block;padding:4px 8px;border-radius:12px;color:#fff;font-size:0.9em}
-    .badge.pending {background:#ffc107;color:#000}
-    .badge.partial {background:#17a2b8}
-    .badge.paid {background:#28a745}
-  </style>
-
+  <!-- Payments Table -->
   {% if not payments %}
-    <p>{{ t('no_payments') }}</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-12 text-center">
+      <i class="icon-dollar-sign text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('no_payments') }}</p>
+      <a href="{{ url_for('payments_add') }}" class="inline-block mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
+        {{ t('add_payment') }} →
+      </a>
+    </div>
   {% else %}
-    <table class="payments-table">
-      <thead>
-        <tr>
-          <th>{{ t('project') }}</th>
-          <th>{{ t('client') }}</th>
-          <th>{{ t('amount') }}</th>
-          <th>{{ t('status') }}</th>
-          <th>{{ t('due_date') }}</th>
-          <th>{{ t('comment') }}</th>
-          <th>{{ t('actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in payments %}
-          <tr>
-            <td>{{ p['project_title'] or '-' }}</td>
-            <td>{{ p['client_name'] or '-' }}</td>
-            <td>{{ p['amount'] }}</td>
-            <td><span class="badge {{ p['status'] }}">{{ p['status'] }}</span></td>
-            <td>{{ p['due_date'] or '-' }}</td>
-            <td>{{ p['comment'] or '-' }}</td>
-            <td>
-              <form method="post" action="{{ url_for('payments_delete', payment_id=p['id']) }}" style="display:inline;">
-                <button type="submit" onclick="return confirm('{{ t('confirm_delete_payment') }}')">{{ t('delete') }}</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('project') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('client') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('amount') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('status') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('due_date') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('comment') }}</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ p['project_title'] or '-' }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ p['client_name'] or '-' }}</td>
+                <td class="py-3 px-4 text-sm font-semibold text-gray-900 dark:text-white">${{ "{:,.2f}".format(p['amount']) }}</td>
+                <td class="py-3 px-4">
+                  {% if p['status'] == 'pending' %}
+                    <span class="badge-yellow">{{ t('pending') }}</span>
+                  {% elif p['status'] == 'partial' %}
+                    <span class="badge-orange">{{ t('partial') }}</span>
+                  {% else %}
+                    <span class="badge-green">{{ t('paid') }}</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ p['due_date'] or '-' }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ p['comment'] or '-' }}</td>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    {% if p['status'] != 'paid' %}
+                    <form method="post" action="{{ url_for('payments_mark_paid', payment_id=p['id']) }}" class="inline">
+                      <button type="submit" class="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 p-2 rounded-lg transition-colors" title="{{ t('mark_paid') }}">
+                        <i class="icon-check text-lg"></i>
+                      </button>
+                    </form>
+                    {% endif %}
+                    <form method="post" action="{{ url_for('payments_delete', payment_id=p['id']) }}" class="inline">
+                      <button type="submit" onclick="return confirm('{{ t('confirm_delete_payment') }}')" class="btn-icon-delete" title="{{ t('delete') }}">
+                        <i class="icon-trash-2"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}

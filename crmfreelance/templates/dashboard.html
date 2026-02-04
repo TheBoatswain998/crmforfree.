@@ -1,51 +1,87 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('hello') }}, {{ current_user.name }}!</h1>
+  <!-- Welcome Header -->
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('hello') }}, {{ current_user.name }}! 👋</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's happening with your business today.</p>
+  </div>
 
-  <style>
-    .dashboard-cards {display:flex;gap:20px;flex-wrap:wrap;margin:20px 0}
-    .card {background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:20px;min-width:200px;flex:1}
-    .card h3 {margin:0 0 10px 0;color:#495057;font-size:0.9em;text-transform:uppercase}
-    .card .value {font-size:2em;font-weight:bold;color:#212529}
-    .card .value.money {color:#28a745}
-    .deadlines-table {width:100%;border-collapse:collapse;margin-top:10px}
-    .deadlines-table th, .deadlines-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
-    .deadlines-table th {background:#f8f9fa;font-size:0.85em;text-transform:uppercase;color:#6c757d}
-  </style>
-
-  <div class="dashboard-cards">
-    <div class="card">
-      <h3>{{ t('active_clients') }}</h3>
-      <div class="value">{{ active_clients }}</div>
+  <!-- Metric Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Active Clients Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+          <i class="icon-users text-blue-600 dark:text-blue-400 text-2xl"></i>
+        </div>
+      </div>
+      <h3 class="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">{{ t('active_clients') }}</h3>
+      <p class="text-4xl font-bold text-gray-900 dark:text-white">{{ active_clients }}</p>
     </div>
-    <div class="card">
-      <h3>{{ t('pending_payments') }}</h3>
-      <div class="value money">{{ "%.2f"|format(pending_amount) }}</div>
+
+    <!-- Pending Payments Card -->
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+          <i class="icon-dollar-sign text-green-600 dark:text-green-400 text-2xl"></i>
+        </div>
+      </div>
+      <h3 class="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">{{ t('pending_payments') }}</h3>
+      <p class="text-4xl font-bold text-green-600 dark:text-green-400">${{ "%.2f"|format(pending_amount) }}</p>
+    </div>
+    
+    <!-- Quick Actions Card -->
+    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+      <h3 class="text-white text-sm font-medium mb-4 opacity-90">Quick Actions</h3>
+      <div class="space-y-2">
+        <a href="/clients/add" class="block bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
+          + {{ t('add_client') }}
+        </a>
+        <a href="/projects/add" class="block bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
+          + {{ t('add_project') }}
+        </a>
+      </div>
     </div>
   </div>
 
-  <h2>{{ t('upcoming_deadlines') }}</h2>
-  {% if upcoming_deadlines %}
-    <table class="deadlines-table">
-      <thead>
-        <tr>
-          <th>{{ t('project') }}</th>
-          <th>{{ t('client') }}</th>
-          <th>{{ t('deadline') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for d in upcoming_deadlines %}
-          <tr>
-            <td>{{ d['title'] }}</td>
-            <td>{{ d['client_name'] or '-' }}</td>
-            <td>{{ d['deadline'] }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  {% else %}
-    <p>{{ t('no_deadlines') }}</p>
-  {% endif %}
+  <!-- Upcoming Deadlines Section -->
+  <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">
+    <div class="px-6 py-4 border-b border-gray-100 dark:border-gray-700">
+      <h2 class="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="icon-calendar text-gray-600 dark:text-gray-400"></i>
+        {{ t('upcoming_deadlines') }}
+      </h2>
+    </div>
+    
+    <div class="p-6">
+      {% if upcoming_deadlines %}
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('project') }}</th>
+                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('client') }}</th>
+                <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('deadline') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in upcoming_deadlines %}
+                <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                  <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ d['title'] }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ d['client_name'] or '-' }}</td>
+                  <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ d['deadline'] }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-12">
+          <i class="icon-calendar text-gray-300 dark:text-gray-600 text-5xl mb-4"></i>
+          <p class="text-gray-500 dark:text-gray-400">{{ t('no_deadlines') }}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 {% endblock %}

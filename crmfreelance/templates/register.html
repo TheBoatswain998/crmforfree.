@@ -1,27 +1,128 @@
-{% extends 'base.html' %}
-
-{% block content %}
-  <h1>{{ t('register') }}</h1>
-
-  <form method="post">
-    <label>{{ t('name') }}:<br>
-      <input type="text" name="name" required>
-    </label>
-    <br><br>
-    <label>{{ t('email') }}:<br>
-      <input type="email" name="email" required>
-    </label>
-    <br><br>
-    <label>{{ t('password') }}:<br>
-      <input type="password" name="password" required>
-    </label>
-    <br><br>
-    <label>{{ t('confirm_password') }}:<br>
-      <input type="password" name="confirm" required>
-    </label>
-    <br><br>
-    <button type="submit">{{ t('register') }}</button>
-  </form>
-
-  <p><a href="/login">{{ t('login') }}</a></p>
-{% endblock %}
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ t('register') }} - Opusio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/lucide-static/font/lucide.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+  
+  <div class="w-full max-w-md">
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+      <!-- Logo & Title -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
+          <i class="icon-briefcase text-blue-600 text-3xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('register') }}</h1>
+        <p class="text-gray-600">Create your account</p>
+      </div>
+      
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+          <div class="mb-6 space-y-3">
+            {% for message in messages %}
+              <div class="bg-red-50 border-l-4 border-red-500 text-red-700 px-4 py-3 rounded-r flex items-start gap-3">
+                <i class="icon-triangle-alert text-xl flex-shrink-0"></i>
+                <p class="text-sm">{{ message }}</p>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      
+      <!-- Register Form -->
+      <form method="post" class="space-y-5">
+        <!-- Name -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('name') }}
+          </label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            placeholder="John Doe"
+          >
+        </div>
+        
+        <!-- Email -->
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('email') }}
+          </label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            placeholder="you@example.com"
+          >
+        </div>
+        
+        <!-- Password -->
+        <div>
+          <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('password') }}
+          </label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            placeholder="••••••••"
+          >
+        </div>
+        
+        <!-- Confirm Password -->
+        <div>
+          <label for="confirm" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('confirm_password') }}
+          </label>
+          <input 
+            type="password" 
+            id="confirm" 
+            name="confirm" 
+            required 
+            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+            placeholder="••••••••"
+          >
+        </div>
+        
+        <!-- Submit Button -->
+        <button 
+          type="submit" 
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+        >
+          <span>{{ t('register') }}</span>
+          <i class="icon-arrow-right text-lg"></i>
+        </button>
+      </form>
+      
+      <!-- Login Link -->
+      <div class="mt-6 text-center">
+        <p class="text-gray-600 text-sm">
+          Already have an account? 
+          <a href="/login" class="text-blue-600 hover:text-blue-700 font-semibold">{{ t('login') }}</a>
+        </p>
+      </div>
+      
+      <!-- Language Switcher -->
+      <div class="mt-6 pt-6 border-t border-gray-200 flex justify-center gap-3 text-sm">
+        <a href="/lang/en" class="{% if lang == 'en' %}font-bold text-blue-600{% else %}text-gray-600 hover:text-blue-600{% endif %}">English</a>
+        <span class="text-gray-300">|</span>
+        <a href="/lang/ru" class="{% if lang == 'ru' %}font-bold text-blue-600{% else %}text-gray-600 hover:text-blue-600{% endif %}">Русский</a>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>

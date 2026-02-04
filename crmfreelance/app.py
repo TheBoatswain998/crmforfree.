@@ -10,7 +10,8 @@ import io
 import zipfile
 import sqlite3
 import bcrypt
-from flask import Flask, g, request, render_template, flash, redirect, url_for, abort, make_response, session
+from datetime import datetime
+from flask import Flask, g, request, render_template, flash, redirect, url_for, abort, make_response, session, jsonify
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from translations import TRANSLATIONS, get_text
 
@@ -126,6 +127,47 @@ def init_db():
             FOREIGN KEY(project_id) REFERENCES projects(id) ON DELETE SET NULL
         )
     ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY,
+            user_id INTEGER,
+            name TEXT,
+            message TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            is_read BOOLEAN DEFAULT 0,
+            FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE SET NULL
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS system_alerts (
+            id INTEGER PRIMARY KEY,
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            is_active BOOLEAN DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS system_settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    ''')
+
+    c.execute("INSERT OR IGNORE INTO system_settings (key, value) VALUES ('service_status', 'green')")
+
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP")
+    except sqlite3.OperationalError:
+        pass
+
+    try:
+        c.execute("ALTER TABLE users ADD COLUMN subscription_status TEXT DEFAULT 'free'")
+    except sqlite3.OperationalError:
+        pass
 
     conn.commit()
     conn.close()
@@ -634,6 +676,27 @@ def projects_delete(project_id):
     return redirect('/projects')
 
 
+@app.route('/projects/complete/<int:project_id>', methods=['POST'])
+@login_required
+def projects_complete(project_id):
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute('''
+            UPDATE projects SET status = 'completed'
+            WHERE id = ? AND user_id = ?
+        ''', (project_id, current_user.id))
+        db.commit()
+        if cur.rowcount == 0:
+            flash(t('project_not_found'))
+        else:
+            flash(t('project_completed'))
+    except sqlite3.Error as e:
+        flash(f"{t('db_error')}: {e}")
+
+    return redirect('/projects')
+
+
 # =============================================================================
 # Payments
 # =============================================================================
@@ -734,6 +797,27 @@ def payments_delete(payment_id):
     return redirect('/payments')
 
 
+@app.route('/payments/mark_paid/<int:payment_id>', methods=['POST'])
+@login_required
+def payments_mark_paid(payment_id):
+    try:
+        db = get_db()
+        cur = db.cursor()
+        cur.execute('''
+            UPDATE payments SET status = 'paid'
+            WHERE id = ? AND user_id = ?
+        ''', (payment_id, current_user.id))
+        db.commit()
+        if cur.rowcount == 0:
+            flash(t('payment_not_found'))
+        else:
+            flash(t('payment_marked_paid'))
+    except sqlite3.Error as e:
+        flash(f"{t('db_error')}: {e}")
+
+    return redirect('/payments')
+
+
 # =============================================================================
 # Export
 # =============================================================================
@@ -786,6 +870,37 @@ def export_data():
     response.headers['Content-Type'] = 'application/zip'
     response.headers['Content-Disposition'] = 'attachment; filename=crm_export.zip'
     return response
+
+
+# =============================================================================
+# Feedback / Support
+# =============================================================================
+
+@app.route('/feedback', methods=['POST'])
+@login_required
+def feedback():
+    try:
+        data = request.get_json()
+        name = data.get('name', current_user.name)
+        message = data.get('message', '')
+        feedback_type = data.get('type', 'feedback')
+        
+        if not message.strip():
+            return jsonify({'error': 'Message is required'}), 400
+        
+        # In a real app, you'd save this to a database or send an email
+        # For now, we'll just log it
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        log_entry = f"[{timestamp}] {feedback_type.upper()} from {name} ({current_user.email}): {message}\n"
+        
+        # Append to a simple log file
+        log_file = os.path.join(BASE_DIR, 'feedback.log')
+        with open(log_file, 'a', encoding='utf-8') as f:
+            f.write(log_entry)
+        
+        return jsonify({'success': True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 # =============================================================================

@@ -1,39 +1,102 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('add_payment') }}</h1>
+  <!-- Page Header -->
+  <div class="mb-6">
+    <a href="/payments" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 mb-2">
+      <i class="icon-arrow-left"></i>
+      <span>{{ t('payments') }}</span>
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900">{{ t('add_payment') }}</h1>
+  </div>
 
-  <form method="post">
-    <label>{{ t('project') }}:<br>
-      <select name="project_id" required>
-        <option value="">{{ t('select_project') }}</option>
-        {% for p in projects %}
-          <option value="{{ p['id'] }}">{{ p['title'] }}{% if p['client_name'] %} ({{ p['client_name'] }}){% endif %}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <br><br>
-    <label>{{ t('amount') }}:<br>
-      <input type="number" step="0.01" name="amount" required>
-    </label>
-    <br><br>
-    <label>{{ t('status') }}:<br>
-      <select name="status">
-        <option value="pending">pending</option>
-        <option value="partial">partial</option>
-        <option value="paid">paid</option>
-      </select>
-    </label>
-    <br><br>
-    <label>{{ t('due_date') }}:<br>
-      <input type="date" name="due_date">
-    </label>
-    <br><br>
-    <label>{{ t('comment') }}:<br>
-      <textarea name="comment" rows="4" cols="40"></textarea>
-    </label>
-    <br><br>
-    <button type="submit">{{ t('add') }}</button>
-    <a href="/payments" style="margin-left:10px;">{{ t('cancel') }}</a>
-  </form>
+  <!-- Form Card -->
+  <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 max-w-2xl">
+    <form method="post" class="space-y-5">
+      <!-- Project -->
+      <div>
+        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('project') }} <span class="text-red-500">*</span>
+        </label>
+        <select id="project_id" name="project_id" required class="input-field">
+          <option value="">{{ t('select_project') }}</option>
+          {% for proj in projects %}
+            <option value="{{ proj['id'] }}">
+              {{ proj['title'] }}{% if proj['client_name'] %} ({{ proj['client_name'] }}){% endif %}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Amount -->
+      <div>
+        <label for="amount" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('amount') }} <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute left-3 top-3 text-gray-500">$</span>
+          <input 
+            type="number" 
+            id="amount" 
+            name="amount" 
+            step="0.01"
+            required 
+            class="input-field pl-8"
+            placeholder="1000.00"
+          >
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Status -->
+        <div>
+          <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('status') }}
+          </label>
+          <select id="status" name="status" class="input-field">
+            <option value="pending">{{ t('pending') }}</option>
+            <option value="partial">{{ t('partial') }}</option>
+            <option value="paid">{{ t('paid') }}</option>
+          </select>
+        </div>
+
+        <!-- Due Date -->
+        <div>
+          <label for="due_date" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('due_date') }}
+          </label>
+          <input 
+            type="date" 
+            id="due_date" 
+            name="due_date" 
+            class="input-field"
+          >
+        </div>
+      </div>
+
+      <!-- Comment -->
+      <div>
+        <label for="comment" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('comment') }}
+        </label>
+        <textarea 
+          id="comment" 
+          name="comment" 
+          rows="3" 
+          class="input-field"
+          placeholder="Payment notes or invoice details..."
+        ></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-4">
+        <button type="submit" class="btn-primary flex-1">
+          {{ t('save') }}
+        </button>
+        <a href="/payments" class="btn-secondary flex-1 text-center">
+          {{ t('cancel') }}
+        </a>
+      </div>
+    </form>
+  </div>
 {% endblock %}

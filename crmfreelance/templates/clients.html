@@ -1,55 +1,119 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('clients') }}</h1>
-
-  <div style="margin-bottom:20px;display:flex;gap:15px;align-items:center;">
-    <a href="{{ url_for('clients_add') }}">{{ t('add_client') }}</a>
-    <span>|</span>
-    <form method="post" action="{{ url_for('clients_import') }}" enctype="multipart/form-data" style="display:inline-flex;gap:8px;align-items:center;">
-      <input type="file" name="csv_file" accept=".csv" required>
-      <button type="submit">{{ t('import_csv') }}</button>
-    </form>
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="icon-users text-blue-600 dark:text-blue-400"></i>
+        {{ t('clients') }}
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your client relationships</p>
+    </div>
+    <div class="flex items-center gap-3">
+      <!-- Import CSV -->
+      <div x-data="{ showModal: false }">
+        <button 
+          @click="showModal = true"
+          class="btn-secondary flex items-center gap-2"
+        >
+          <i class="icon-upload"></i>
+          <span>{{ t('import_csv') }}</span>
+        </button>
+        
+        <!-- Import Modal -->
+        <div 
+          x-show="showModal" 
+          x-cloak
+          class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          @click.self="showModal = false"
+        >
+          <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full p-6">
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ t('import_csv') }}</h3>
+            <form method="post" action="{{ url_for('clients_import') }}" enctype="multipart/form-data">
+              <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('select_file') }}</label>
+                <input 
+                  type="file" 
+                  name="csv_file" 
+                  accept=".csv" 
+                  required
+                  class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+              </div>
+              <div class="flex gap-3">
+                <button type="submit" class="btn-primary flex-1">{{ t('submit') }}</button>
+                <button type="button" @click="showModal = false" class="btn-secondary flex-1">{{ t('cancel') }}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Add Client Button -->
+      <a href="{{ url_for('clients_add') }}" class="btn-primary flex items-center gap-2">
+        <i class="icon-plus"></i>
+        <span>{{ t('add_client') }}</span>
+      </a>
+    </div>
   </div>
 
-  <style>
-    .clients-table {width:100%;border-collapse:collapse}
-    .clients-table th, .clients-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
-    .badge {display:inline-block;padding:4px 8px;border-radius:12px;color:#fff;font-size:0.9em}
-    .badge.active {background:#28a745}
-    .badge.cold {background:#6c757d}
-    .badge.archived {background:#6f42c1}
-  </style>
-
+  <!-- Clients Table -->
   {% if not clients %}
-    <p>{{ t('no_clients') }}</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-12 text-center">
+      <i class="icon-users text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('no_clients') }}</p>
+      <a href="{{ url_for('clients_add') }}" class="inline-block mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
+        {{ t('add_client') }} →
+      </a>
+    </div>
   {% else %}
-    <table class="clients-table">
-      <thead>
-        <tr>
-          <th>{{ t('name') }}</th>
-          <th>{{ t('email') }}</th>
-          <th>{{ t('status') }}</th>
-          <th>{{ t('last_contact') }}</th>
-          <th>{{ t('actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in clients %}
-          <tr>
-            <td>{{ c['name'] }}</td>
-            <td>{{ c['email'] or '-' }}</td>
-            <td><span class="badge {{ c['status'] }}">{{ c['status'] }}</span></td>
-            <td>{{ c['last_contact'] or '-' }}</td>
-            <td>
-              <a href="{{ url_for('clients_edit', client_id=c['id']) }}">{{ t('edit') }}</a>
-              <form method="post" action="{{ url_for('clients_delete', client_id=c['id']) }}" style="display:inline;margin-left:8px;">
-                <button type="submit" onclick="return confirm('{{ t('confirm_delete_client') }}')">{{ t('delete') }}</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('name') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('email') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('contact') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('status') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('last_contact') }}</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in clients %}
+              <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ c['name'] }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ c['email'] or '-' }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ c['contact'] or '-' }}</td>
+                <td class="py-3 px-4">
+                  {% if c['status'] == 'active' %}
+                    <span class="badge-green">{{ t('active') }}</span>
+                  {% elif c['status'] == 'cold' %}
+                    <span class="badge-yellow">{{ t('cold') }}</span>
+                  {% else %}
+                    <span class="badge-gray">{{ t('archived') }}</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ c['last_contact'] or '-' }}</td>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    <a href="{{ url_for('clients_edit', client_id=c['id']) }}" class="btn-icon-edit" title="{{ t('edit') }}">
+                      <i class="icon-pencil"></i>
+                    </a>
+                    <form method="post" action="{{ url_for('clients_delete', client_id=c['id']) }}" class="inline">
+                      <button type="submit" onclick="return confirm('{{ t('confirm_delete_client') }}')" class="btn-icon-delete" title="{{ t('delete') }}">
+                        <i class="icon-trash-2"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}

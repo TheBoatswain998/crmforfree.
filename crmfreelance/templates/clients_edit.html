@@ -1,34 +1,96 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('edit_client') }}</h1>
+  <!-- Page Header -->
+  <div class="mb-6">
+    <a href="/clients" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 mb-2">
+      <i class="icon-arrow-left"></i>
+      <span>{{ t('clients') }}</span>
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900">{{ t('edit_client') }}</h1>
+  </div>
 
-  <form method="post">
-    <label>{{ t('name') }}:<br>
-      <input type="text" name="name" value="{{ client['name'] }}" required>
-    </label>
-    <br><br>
-    <label>{{ t('email') }}:<br>
-      <input type="email" name="email" value="{{ client['email'] or '' }}" required>
-    </label>
-    <br><br>
-    <label>{{ t('contact') }}:<br>
-      <input type="text" name="contact" value="{{ client['contact'] or '' }}">
-    </label>
-    <br><br>
-    <label>{{ t('status') }}:<br>
-      <select name="status">
-        <option value="active" {% if client['status'] == 'active' %}selected{% endif %}>active</option>
-        <option value="cold" {% if client['status'] == 'cold' %}selected{% endif %}>cold</option>
-        <option value="archived" {% if client['status'] == 'archived' %}selected{% endif %}>archived</option>
-      </select>
-    </label>
-    <br><br>
-    <label>{{ t('notes') }}:<br>
-      <textarea name="notes" rows="4" cols="40">{{ client['notes'] or '' }}</textarea>
-    </label>
-    <br><br>
-    <button type="submit">{{ t('save') }}</button>
-    <a href="/clients" style="margin-left:10px;">{{ t('cancel') }}</a>
-  </form>
+  <!-- Form Card -->
+  <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 max-w-2xl">
+    <form method="post" class="space-y-5">
+      <!-- Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('name') }} <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          required 
+          value="{{ client['name'] }}"
+          class="input-field"
+        >
+      </div>
+
+      <!-- Email -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('email') }} <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          required 
+          value="{{ client['email'] }}"
+          class="input-field"
+        >
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <label for="contact" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('contact') }}
+        </label>
+        <input 
+          type="text" 
+          id="contact" 
+          name="contact" 
+          value="{{ client['contact'] or '' }}"
+          class="input-field"
+        >
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('status') }}
+        </label>
+        <select id="status" name="status" class="input-field">
+          <option value="active" {% if client['status'] == 'active' %}selected{% endif %}>{{ t('active') }}</option>
+          <option value="cold" {% if client['status'] == 'cold' %}selected{% endif %}>{{ t('cold') }}</option>
+          <option value="archived" {% if client['status'] == 'archived' %}selected{% endif %}>{{ t('archived') }}</option>
+        </select>
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label for="notes" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('notes') }}
+        </label>
+        <textarea 
+          id="notes" 
+          name="notes" 
+          rows="4" 
+          class="input-field"
+        >{{ client['notes'] or '' }}</textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-4">
+        <button type="submit" class="btn-primary flex-1">
+          {{ t('save') }}
+        </button>
+        <a href="/clients" class="btn-secondary flex-1 text-center">
+          {{ t('cancel') }}
+        </a>
+      </div>
+    </form>
+  </div>
 {% endblock %}

@@ -1,44 +1,114 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('edit_project') }}</h1>
+  <!-- Page Header -->
+  <div class="mb-6">
+    <a href="/projects" class="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center gap-1 mb-2">
+      <i class="icon-arrow-left"></i>
+      <span>{{ t('projects') }}</span>
+    </a>
+    <h1 class="text-3xl font-bold text-gray-900">{{ t('edit_project') }}</h1>
+  </div>
 
-  <form method="post">
-    <label>{{ t('title') }}:<br>
-      <input type="text" name="title" value="{{ project['title'] }}" required>
-    </label>
-    <br><br>
-    <label>{{ t('client') }}:<br>
-      <select name="client_id">
-        <option value="">{{ t('no_client') }}</option>
-        {% for c in clients %}
-          <option value="{{ c['id'] }}" {% if project['client_id'] == c['id'] %}selected{% endif %}>{{ c['name'] }}</option>
-        {% endfor %}
-      </select>
-    </label>
-    <br><br>
-    <label>{{ t('status') }}:<br>
-      <select name="status">
-        <option value="discussion" {% if project['status'] == 'discussion' %}selected{% endif %}>discussion</option>
-        <option value="in_progress" {% if project['status'] == 'in_progress' %}selected{% endif %}>in_progress</option>
-        <option value="paused" {% if project['status'] == 'paused' %}selected{% endif %}>paused</option>
-        <option value="completed" {% if project['status'] == 'completed' %}selected{% endif %}>completed</option>
-      </select>
-    </label>
-    <br><br>
-    <label>{{ t('budget') }}:<br>
-      <input type="number" step="0.01" name="budget" value="{{ project['budget'] or '' }}">
-    </label>
-    <br><br>
-    <label>{{ t('deadline') }}:<br>
-      <input type="date" name="deadline" value="{{ project['deadline'] or '' }}">
-    </label>
-    <br><br>
-    <label>{{ t('description') }}:<br>
-      <textarea name="description" rows="4" cols="40">{{ project['description'] or '' }}</textarea>
-    </label>
-    <br><br>
-    <button type="submit">{{ t('save') }}</button>
-    <a href="/projects" style="margin-left:10px;">{{ t('cancel') }}</a>
-  </form>
+  <!-- Form Card -->
+  <div class="bg-white rounded-xl shadow-md border border-gray-100 p-6 max-w-2xl">
+    <form method="post" class="space-y-5">
+      <!-- Title -->
+      <div>
+        <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('title') }} <span class="text-red-500">*</span>
+        </label>
+        <input 
+          type="text" 
+          id="title" 
+          name="title" 
+          required 
+          value="{{ project['title'] }}"
+          class="input-field"
+        >
+      </div>
+
+      <!-- Client -->
+      <div>
+        <label for="client_id" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('client') }}
+        </label>
+        <select id="client_id" name="client_id" class="input-field">
+          <option value="">{{ t('no_client') }}</option>
+          {% for client in clients %}
+            <option value="{{ client['id'] }}" {% if client['id'] == project['client_id'] %}selected{% endif %}>
+              {{ client['name'] }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div>
+        <label for="status" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('status') }}
+        </label>
+        <select id="status" name="status" class="input-field">
+          <option value="discussion" {% if project['status'] == 'discussion' %}selected{% endif %}>{{ t('discussion') }}</option>
+          <option value="in_progress" {% if project['status'] == 'in_progress' %}selected{% endif %}>{{ t('in_progress') }}</option>
+          <option value="paused" {% if project['status'] == 'paused' %}selected{% endif %}>{{ t('paused') }}</option>
+          <option value="completed" {% if project['status'] == 'completed' %}selected{% endif %}>{{ t('completed') }}</option>
+        </select>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+        <!-- Budget -->
+        <div>
+          <label for="budget" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('budget') }}
+          </label>
+          <input 
+            type="number" 
+            id="budget" 
+            name="budget" 
+            step="0.01"
+            value="{{ project['budget'] or '' }}"
+            class="input-field"
+          >
+        </div>
+
+        <!-- Deadline -->
+        <div>
+          <label for="deadline" class="block text-sm font-medium text-gray-700 mb-2">
+            {{ t('deadline') }}
+          </label>
+          <input 
+            type="date" 
+            id="deadline" 
+            name="deadline" 
+            value="{{ project['deadline'] or '' }}"
+            class="input-field"
+          >
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+          {{ t('description') }}
+        </label>
+        <textarea 
+          id="description" 
+          name="description" 
+          rows="4" 
+          class="input-field"
+        >{{ project['description'] or '' }}</textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-4">
+        <button type="submit" class="btn-primary flex-1">
+          {{ t('save') }}
+        </button>
+        <a href="/projects" class="btn-secondary flex-1 text-center">
+          {{ t('cancel') }}
+        </a>
+      </div>
+    </form>
+  </div>
 {% endblock %}

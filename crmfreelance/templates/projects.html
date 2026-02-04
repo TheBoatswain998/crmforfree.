@@ -1,46 +1,86 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <h1>{{ t('projects') }}</h1>
+  <!-- Page Header -->
+  <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+        <i class="icon-briefcase text-blue-600 dark:text-blue-400"></i>
+        {{ t('projects') }}
+      </h1>
+      <p class="text-gray-600 dark:text-gray-400 mt-1">Track your ongoing work</p>
+    </div>
+    <a href="{{ url_for('projects_add') }}" class="btn-primary flex items-center gap-2">
+      <i class="icon-plus"></i>
+      <span>{{ t('add_project') }}</span>
+    </a>
+  </div>
 
-  <p><a href="{{ url_for('projects_add') }}">{{ t('add_project') }}</a></p>
-
-  <style>
-    .projects-table {width:100%;border-collapse:collapse}
-    .projects-table th, .projects-table td {padding:8px 10px;text-align:left;border-bottom:1px solid #eee}
-  </style>
-
+  <!-- Projects Table -->
   {% if not projects %}
-    <p>{{ t('no_projects') }}</p>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 p-12 text-center">
+      <i class="icon-briefcase text-gray-300 dark:text-gray-600 text-6xl mb-4"></i>
+      <p class="text-gray-500 dark:text-gray-400 text-lg">{{ t('no_projects') }}</p>
+      <a href="{{ url_for('projects_add') }}" class="inline-block mt-4 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold">
+        {{ t('add_project') }} →
+      </a>
+    </div>
   {% else %}
-    <table class="projects-table">
-      <thead>
-        <tr>
-          <th>{{ t('title') }}</th>
-          <th>{{ t('client') }}</th>
-          <th>{{ t('status') }}</th>
-          <th>{{ t('budget') }}</th>
-          <th>{{ t('deadline') }}</th>
-          <th>{{ t('actions') }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for p in projects %}
-          <tr>
-            <td>{{ p['title'] }}</td>
-            <td>{{ p['client_name'] or '-' }}</td>
-            <td>{{ p['status'] }}</td>
-            <td>{{ p['budget'] or '-' }}</td>
-            <td>{{ p['deadline'] or '-' }}</td>
-            <td>
-              <a href="{{ url_for('projects_edit', project_id=p['id']) }}">{{ t('edit') }}</a>
-              <form method="post" action="{{ url_for('projects_delete', project_id=p['id']) }}" style="display:inline;margin-left:8px;">
-                <button type="submit" onclick="return confirm('{{ t('confirm_delete_project') }}')">{{ t('delete') }}</button>
-              </form>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+            <tr>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('title') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('client') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('status') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('budget') }}</th>
+              <th class="text-left py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('deadline') }}</th>
+              <th class="text-right py-3 px-4 text-sm font-semibold text-gray-600 dark:text-gray-400">{{ t('actions') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in projects %}
+              <tr class="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition">
+                <td class="py-3 px-4 text-sm font-medium text-gray-900 dark:text-white">{{ p['title'] }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ p['client_name'] or '-' }}</td>
+                <td class="py-3 px-4">
+                  {% if p['status'] == 'discussion' %}
+                    <span class="badge-blue">{{ t('discussion') }}</span>
+                  {% elif p['status'] == 'in_progress' %}
+                    <span class="badge-purple">{{ t('in_progress') }}</span>
+                  {% elif p['status'] == 'paused' %}
+                    <span class="badge-orange">{{ t('paused') }}</span>
+                  {% else %}
+                    <span class="badge-green">{{ t('completed') }}</span>
+                  {% endif %}
+                </td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ "${:,.2f}".format(p['budget']) if p['budget'] else '-' }}</td>
+                <td class="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">{{ p['deadline'] or '-' }}</td>
+                <td class="py-3 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2">
+                    {% if p['status'] != 'completed' %}
+                    <form method="post" action="{{ url_for('projects_complete', project_id=p['id']) }}" class="inline">
+                      <button type="submit" class="text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/30 p-2 rounded-lg transition-colors" title="{{ t('complete') }}">
+                        <i class="icon-check text-lg"></i>
+                      </button>
+                    </form>
+                    {% endif %}
+                    <a href="{{ url_for('projects_edit', project_id=p['id']) }}" class="btn-icon-edit" title="{{ t('edit') }}">
+                      <i class="icon-pencil"></i>
+                    </a>
+                    <form method="post" action="{{ url_for('projects_delete', project_id=p['id']) }}" class="inline">
+                      <button type="submit" onclick="return confirm('{{ t('confirm_delete_project') }}')" class="btn-icon-delete" title="{{ t('delete') }}">
+                        <i class="icon-trash-2"></i>
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}
