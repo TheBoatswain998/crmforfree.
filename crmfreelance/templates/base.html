@@ -1,10 +1,32 @@
 <!doctype html>
-<html lang="{{ lang }}" x-data="themeManager()" :class="theme === 'dark' ? 'dark' : ''">
+<html lang="{{ lang }}" x-data="themeManager()" x-init="init()" :class="isDark ? 'dark' : ''">
 <head>
   <meta charset="utf-8">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Opusio</title>
   
+  <script>
+    // Apply stored theme as early as possible to avoid light/dark flash
+    (function(){
+      try {
+        const t = localStorage.getItem('theme') || 'system';
+        const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (t === 'dark' || (t === 'system' && prefers)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch(e) {}
+    })();
+
+    // Configure Tailwind to use class-based dark mode so `dark:` variants respond to the `dark` class
+    try {
+      window.tailwind ??= {};
+      window.tailwind.config = window.tailwind.config || {};
+      window.tailwind.config.darkMode = 'class';
+    } catch(e) {}
+  </script>
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -13,6 +35,10 @@
   
   <!-- Custom Styles -->
   <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='animations.css') }}" rel="stylesheet">
+  
+  <!-- Feather Icons (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
   
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
@@ -20,18 +46,118 @@
   <style>
     [x-cloak] { display: none !important; }
   </style>
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      try { feather.replace(); } catch(e) {}
+    });
+  </script>
   
   <script>
     // Theme Manager - must be loaded before Alpine
     function themeManager() {
       return {
-        theme: localStorage.getItem('theme') || 'light',
-        toggleTheme() {
-          this.theme = this.theme === 'light' ? 'dark' : 'light';
-          localStorage.setItem('theme', this.theme);
+        theme: localStorage.getItem('theme') || 'system',
+        setTheme(value) {
+          this.theme = value;
+          localStorage.setItem('theme', value);
+
+          // Update document class immediately so styles switch at once
+          if (value === 'system') {
+            const prefers = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.classList.toggle('dark', prefers);
+          } else {
+            document.documentElement.classList.toggle('dark', value === 'dark');
+          }
+
+          // notify any other scripts/pages that theme changed
+          try { window.dispatchEvent(new CustomEvent('theme-change', { detail: value })); } catch(e) {}
+        },
+        get isDark() {
+          if (this.theme === 'system') {
+            return window.matchMedia('(prefers-color-scheme: dark)').matches;
+          }
+          return this.theme === 'dark';
+        },
+        // listen for custom theme-change events from other parts of the UI
+        init() {
+          // respond to programmatic theme changes
+          window.addEventListener('theme-change', (e) => {
+            if (e && e.detail) this.setTheme(e.detail);
+          });
+
+          // keep `system` in sync with OS preference changes
+          try {
+            const mq = window.matchMedia('(prefers-color-scheme: dark)');
+            mq.addEventListener && mq.addEventListener('change', (ev) => {
+              if (this.theme === 'system') {
+                document.documentElement.classList.toggle('dark', ev.matches);
+              }
+            });
+          } catch (e) {}
         }
       }
     }
+  </script>
+  <script>
+    // Global fetch wrapper to send CSRF token for same-origin requests (skip webhooks/external)
+    (function(){
+      const meta = document.querySelector('meta[name="csrf-token"]');
+      if (!meta) return;
+      const csrfToken = meta.getAttribute('content');
+      if (!csrfToken) return;
+
+      const _fetch = window.fetch.bind(window);
+      window.fetch = function(url, options){
+        options = options || {};
+        try{
+          const target = new URL(url, window.location.origin);
+          if (target.origin === window.location.origin) {
+            options.headers = options.headers || {};
+            if (!options.headers['X-CSRFToken'] && !options.headers['X-CSRF-Token']) {
+              options.headers['X-CSRFToken'] = csrfToken;
+            }
+          }
+        } catch(e) {
+          // ignore malformed urls
+        }
+        return _fetch(url, options);
+      };
+    })();
+  </script>
+  <script>
+    // Auto-insert hidden csrf_token into all same-origin POST forms
+    document.addEventListener('DOMContentLoaded', function() {
+      try {
+        const meta = document.querySelector('meta[name="csrf-token"]');
+        if (!meta) return;
+        const token = meta.getAttribute('content');
+        if (!token) return;
+
+        const forms = document.querySelectorAll('form[method]');
+        forms.forEach(form => {
+          const method = (form.getAttribute('method') || '').toLowerCase();
+          if (method !== 'post') return;
+          // Only for same-origin actions (or empty action)
+          const action = form.getAttribute('action') || window.location.pathname;
+          try {
+            const url = new URL(action, window.location.origin);
+            if (url.origin !== window.location.origin) return;
+          } catch (e) {
+            // if URL parsing fails, skip
+          }
+
+          if (!form.querySelector('input[name="csrf_token"]')) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'csrf_token';
+            input.value = token;
+            form.appendChild(input);
+          }
+        });
+      } catch (e) {
+        // silent
+      }
+    });
   </script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
@@ -66,14 +192,19 @@
               <i class="icon-dollar-sign"></i>
               <span>{{ t('payments') }}</span>
             </a>
+            <a href="/settings" class="nav-link {% if request.path.startswith('/settings') %}active{% endif %}">
+              <i class="icon-settings"></i>
+              <span>{{ t('settings') }}</span>
+            </a>
           </nav>
           
           <!-- Theme & Language Switcher -->
           <div class="flex items-center gap-3 text-sm border-l pl-4 border-gray-200 dark:border-gray-700">
             <!-- Theme Toggle -->
-            <button @click="toggleTheme()" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" :title="theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'">
+            <button @click="setTheme(theme === 'dark' ? 'light' : theme === 'light' ? 'system' : 'dark')" class="text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors" :title="'Current: ' + theme">
               <i x-show="theme === 'light'" class="icon-moon text-lg"></i>
               <i x-show="theme === 'dark'" class="icon-sun text-lg"></i>
+              <i x-show="theme === 'system'" class="icon-monitor text-lg"></i>
             </button>
             <span class="text-gray-300 dark:text-gray-600">|</span>
             <!-- Language Switcher -->
@@ -124,46 +255,77 @@
   {% if current_user.is_authenticated %}
   <div x-data="feedbackWidget()" class="fixed bottom-6 right-6 z-40">
     <!-- Feedback Popup -->
-    <div x-show="showPopup" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4" class="absolute bottom-16 right-0 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-5 mb-2">
+    <div x-show="showPopup" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-4" class="absolute bottom-24 right-0 w-96 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6 mb-2 max-h-96 overflow-y-auto">
       <div x-show="!submitted">
-        <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-1" x-text="popupTitle"></h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" x-show="isSupport">{{ t('name') }} — Павел 👋</p>
+        <!-- Header -->
+        <div class="flex justify-between items-start mb-4">
+          <div>
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-1" x-text="popupTitle"></h3>
+            <p class="text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-2 py-1 rounded inline-block" x-show="!isSupport">
+              📬 Попадёт на панель админа
+            </p>
+          </div>
+          <button @click="closePopup()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 text-2xl font-light">×</button>
+        </div>
+
+        <!-- Description -->
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" x-show="isSupport">Готов помочь! Павел обычно отвечает в течение часа.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" x-show="!isSupport">Ваши предложения, вопросы и отчёты об ошибках помогают нам улучшать Opusio. Спасибо!</p>
         
-        <div class="space-y-3">
+        <div class="space-y-4">
           <div>
-            <input type="text" x-model="name" :placeholder="isSupport ? '{{ t('name') }} ({{ t('optional') }})' : '{{ t('name') }}'" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <label class="text-xs font-semibold text-gray-700 dark:text-gray-300 block mb-1">Сообщение</label>
+            <textarea x-model="message" :placeholder="isSupport ? 'Опишите задачу или вопрос...' : 'Ваше предложение или отзыв...'" rows="5" class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="message.length + ' / 1000'"></p>
           </div>
-          <div>
-            <textarea x-model="message" :placeholder="isSupport ? '{{ t('describe_issue') }}' : '{{ t('feedback_placeholder') }}'" rows="4" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"></textarea>
-          </div>
-          <div class="flex gap-2">
-            <button @click="submitFeedback()" :disabled="!message.trim()" class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors" :class="!message.trim() && 'cursor-not-allowed'">
-              {{ t('send') }}
+          
+          <div class="flex gap-2 pt-2">
+            <button @click="submitFeedback()" :disabled="!message.trim()" class="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-300 disabled:to-gray-400 dark:disabled:from-gray-600 dark:disabled:to-gray-700 text-white font-semibold py-3 px-4 rounded-lg text-sm transition-all" :class="!message.trim() && 'cursor-not-allowed'">
+              ✉️ Отправить
             </button>
-            <button @click="closePopup()" class="px-4 py-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white text-sm font-medium">
-              {{ t('cancel') }}
+            <button @click="closePopup()" class="px-4 py-3 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-sm font-medium transition-colors">
+              Отмена
             </button>
           </div>
         </div>
       </div>
       
       <!-- Success Message -->
-      <div x-show="submitted" class="text-center py-4">
-        <div class="text-green-600 dark:text-green-400 text-3xl mb-2">✓</div>
-        <p class="text-gray-900 dark:text-white font-semibold">{{ t('sent') }}!</p>
+      <div x-show="submitted" class="text-center py-6 px-4">
+        <div class="text-5xl mb-3 animate-pulse">✨</div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white mb-2">Спасибо!</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4" x-show="!isSupport">Ваше сообщение получено. Админ прочитает его в ближайшее время.</p>
+        <p class="text-sm text-gray-600 dark:text-gray-400" x-show="isSupport">Мы ответим вам как можно скорее.</p>
       </div>
     </div>
     
     <!-- Floating Buttons -->
-    <div class="flex flex-col gap-2">
-      <button @click="openPopup('feedback')" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-5 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-medium">
-        <span class="text-xl">💬</span>
-        <span>Feedback</span>
-      </button>
-      <button @click="openPopup('support')" class="bg-purple-600 hover:bg-purple-700 text-white rounded-full px-5 py-3 shadow-lg hover:shadow-xl transition-all flex items-center gap-2 font-medium">
-        <span class="text-xl">❓</span>
-        <span>Help</span>
-      </button>
+    <div class="flex flex-col gap-3 group">
+      <!-- Feedback Button with enhanced styling -->
+      <div class="relative group/feedback">
+        <button @click="openPopup('feedback')" class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-full px-6 py-4 shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 font-semibold group hover:scale-110 transform duration-200" title="Отправить сообщение администратору">
+          <span class="text-2xl animate-bounce">💬</span>
+          <span class="hidden group-hover:inline">Feedback</span>
+        </button>
+        <!-- Tooltip on hover -->
+        <div class="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover/feedback:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Есть вопрос? Напишите нам 📬
+          <div class="absolute top-full right-2 w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"></div>
+        </div>
+      </div>
+
+      <!-- Help Button with enhanced styling -->
+      <div class="relative group/help">
+        <button @click="openPopup('support')" class="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-full px-6 py-4 shadow-xl hover:shadow-2xl transition-all flex items-center gap-2 font-semibold group hover:scale-110 transform duration-200" title="Получить справку">
+          <span class="text-2xl">❓</span>
+          <span class="hidden group-hover:inline">Help</span>
+        </button>
+        <!-- Tooltip on hover -->
+        <div class="absolute bottom-full right-0 mb-3 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover/help:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+          Помощь по использованию
+          <div class="absolute top-full right-2 w-2 h-2 bg-gray-900 dark:bg-gray-700 transform rotate-45"></div>
+        </div>
+      </div>
     </div>
   </div>
   
@@ -200,15 +362,13 @@
           if (!this.message.trim()) return;
           
           try {
-            const response = await fetch('/feedback', {
+            const response = await fetch('/api/feedback', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                name: this.name,
-                message: this.message,
-                type: this.isSupport ? 'support' : 'feedback'
+                message: this.message
               })
             });
             
@@ -288,5 +448,226 @@
       });
     }, 5000);
   </script>
+  
+  <!-- Footer -->
+  <footer class="mt-12 border-t border-gray-200 dark:border-gray-700">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <p class="text-center text-sm text-gray-600 dark:text-gray-400">
+        Opusio — порядок вместо хаоса
+      </p>
+    </div>
+  </footer>
+
+  <!-- Notifications Container -->
+  <div id="notificationsContainer"></div>
+  <div id="announcementContainer" class="fixed top-20 left-0 right-0 z-50"></div>
+
+  <!-- Check for notifications and announcements -->
+  <script>
+    document.addEventListener('DOMContentLoaded', async function() {
+      // Only check if user is authenticated
+      const authMeta = document.querySelector('meta[name="csrf-token"]');
+      if (!authMeta) return;
+
+      // Check for reply notifications
+      async function checkReplies() {
+        try {
+          const response = await fetch('/api/user/replies');
+          const data = await response.json();
+          
+          if (data.success && data.replies && data.replies.length > 0) {
+            const reply = data.replies[0]; // Most recent
+            showReplyNotification(reply);
+          }
+        } catch (error) {
+          console.error('Error checking replies:', error);
+        }
+      }
+
+      // Check for announcements (skip if dismissed; only show once per announcement)
+      async function checkAnnouncements() {
+        try {
+          const response = await fetch('/api/announcements');
+          const data = await response.json();
+          if (data.success && data.announcement) {
+            const announcement = data.announcement;
+            const id = String(announcement[0]);
+            if (!isAnnouncementDismissed(id) && window.currentAnnouncementId !== id) {
+              showAnnouncementBanner(announcement);
+              window.currentAnnouncementId = id;
+            }
+          } else {
+            // clear current id when no announcement present
+            window.currentAnnouncementId = null;
+          }
+        } catch (error) {
+          console.error('Error checking announcements:', error);
+        }
+      }
+
+      // Show notification for new reply
+      function showReplyNotification(reply) {
+        const container = document.getElementById('notificationsContainer');
+        const notifDiv = document.createElement('div');
+        notifDiv.className = 'fixed top-24 right-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg border-l-4 border-blue-600 p-4 max-w-sm z-50 animate-pulse';
+        notifDiv.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="text-2xl">💬</div>
+            <div class="flex-1">
+              <h4 class="font-semibold text-gray-900 dark:text-white">Админ ответил!</h4>
+              <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">${reply[2] || 'Новый ответ на ваше сообщение'}</p>
+              <button onclick="this.parentElement.parentElement.remove()" class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mt-2 underline">Закрыть</button>
+            </div>
+          </div>
+        `;
+        container.appendChild(notifDiv);
+        
+        // Auto-remove after 8 seconds
+        setTimeout(() => {
+          if (notifDiv.parentElement) notifDiv.remove();
+        }, 8000);
+      }
+
+      // Helpers for per-user dismissal (localStorage)
+      function isAnnouncementDismissed(id) {
+        try {
+          const list = JSON.parse(localStorage.getItem('dismissedAnnouncements') || '[]');
+          return list.includes(String(id));
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function dismissAnnouncement(id) {
+        try {
+          const key = 'dismissedAnnouncements';
+          const arr = JSON.parse(localStorage.getItem(key) || '[]');
+          if (!arr.includes(String(id))) {
+            arr.push(String(id));
+            localStorage.setItem(key, JSON.stringify(arr));
+          }
+        } catch (e) {}
+      }
+
+      // Show announcement as a small bottom bar; dismissal persists per-user (localStorage)
+      function showAnnouncementBanner(announcement) {
+        const container = document.getElementById('announcementContainer');
+        const id = String(announcement[0]);
+        const title = announcement[1];
+        const message = announcement[2];
+
+        // don't show if dismissed or already shown
+        if (isAnnouncementDismissed(id) || document.getElementById('announcement-bar-' + id)) return;
+
+        const bar = document.createElement('div');
+        bar.id = 'announcement-bar-' + id;
+        bar.className = 'fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-orange-500 text-white px-4 py-2 rounded-lg shadow-md flex items-center gap-3 max-w-3xl w-full mx-4 animate-slideUp';
+        bar.style.boxShadow = '0 6px 24px rgba(0,0,0,0.12)';
+        bar.innerHTML = `
+          <div class="flex-1 text-sm truncate"><strong class="mr-2">${title}</strong>${message}</div>
+          <div class="flex items-center gap-2 ml-3">
+            <button id="announce-action-${id}" class="text-xs bg-white/20 text-white px-2 py-1 rounded">Details</button>
+            <button id="announce-close-${id}" class="text-sm text-white/90 px-2 py-1 rounded">✕</button>
+          </div>
+        `;
+        container.appendChild(bar);
+
+        // Close handler — persist dismissal so it won't reappear
+        document.getElementById('announce-close-' + id).addEventListener('click', function() {
+          dismissAnnouncement(id);
+          bar.remove();
+          window.currentAnnouncementId = null;
+        });
+
+        // Optional action button (opens announcements page or expands) — keep minimal
+        document.getElementById('announce-action-' + id).addEventListener('click', function() {
+          // simple behavior: scroll to top and open announcements modal if exists
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // Auto-hide after 12s and persist dismissal
+        setTimeout(() => {
+          if (bar.parentElement) {
+            dismissAnnouncement(id);
+            bar.remove();
+            window.currentAnnouncementId = null;
+          }
+        }, 12000);
+      }
+
+      // Check for maintenance / system status
+      async function checkServiceStatus() {
+        try {
+          const r = await fetch('/api/system_status');
+          const d = await r.json();
+          if (d.success && d.maintenance_mode === 'on') {
+            showMaintenanceBanner(d.maintenance_message || 'Краткие технические работы. Вернёмся через 10 минут');
+          }
+        } catch (err) {
+          // ignore
+        }
+      }
+
+      function showMaintenanceBanner(message) {
+        const container = document.getElementById('announcementContainer');
+        const bannerDiv = document.createElement('div');
+        bannerDiv.className = 'bg-yellow-500 text-white px-6 py-4 shadow-md flex items-center justify-between animate-slideDown';
+        bannerDiv.innerHTML = `
+          <div class="flex items-center gap-3 flex-1">
+            <div class="text-2xl">🛠️</div>
+            <div>
+              <p class="font-semibold">Краткие техничесные работы</p>
+              <p class="text-sm opacity-90">${message}</p>
+            </div>
+          </div>
+          <button onclick="this.parentElement.remove()" class="text-white hover:bg-white hover:bg-opacity-20 rounded px-3 py-1 transition-colors">✕</button>
+        `;
+        container.appendChild(bannerDiv);
+      }
+
+      // Check on page load
+      checkReplies();
+      checkAnnouncements();
+      checkServiceStatus();
+
+      // Check every 30 seconds for updates
+      setInterval(() => {
+        checkReplies();
+        checkAnnouncements();
+        checkServiceStatus();
+      }, 30000);
+    });
+  </script>
+
+  <style>
+    @keyframes slideDown {
+      from {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .animate-slideDown {
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    .animate-slideUp {
+      animation: slideUp 0.28s cubic-bezier(.2,.9,.2,1);
+    }
+  </style>
+
 </body>
 </html>

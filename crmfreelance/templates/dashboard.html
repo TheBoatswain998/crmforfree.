@@ -7,6 +7,22 @@
     <p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's happening with your business today.</p>
   </div>
 
+  <!-- Onboarding Message -->
+  {% if profession %}
+  <div class="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-xl shadow-md p-6 text-white mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold mb-1">Добро пожаловать, {{ profession }}!</h3>
+        <p class="text-sm opacity-90">Вы добавили {{ active_clients }} клиента. Дедлайн — {{ upcoming_deadlines[0]['deadline'] if upcoming_deadlines else 'не указан' }}. Я напомню за 2 дня.</p>
+      </div>
+      <div class="text-right">
+        <p class="text-sm opacity-80">После первого экспорта данных:</p>
+        <p class="text-sm font-medium">Ваши данные всегда с вами. Спасибо, что доверяете Opusio</p>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <!-- Metric Cards -->
   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
     <!-- Active Clients Card -->
@@ -31,19 +47,51 @@
       <p class="text-4xl font-bold text-green-600 dark:text-green-400">${{ "%.2f"|format(pending_amount) }}</p>
     </div>
     
-    <!-- Quick Actions Card -->
-    <div class="bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
-      <h3 class="text-white text-sm font-medium mb-4 opacity-90">Quick Actions</h3>
-      <div class="space-y-2">
-        <a href="/clients/add" class="block bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
-          + {{ t('add_client') }}
-        </a>
-        <a href="/projects/add" class="block bg-white/20 hover:bg-white/30 rounded-lg px-4 py-2 text-sm font-medium transition">
-          + {{ t('add_project') }}
-        </a>
+    <!-- Expected Payments Card -->
+    {% if expected_payments %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+          <i class="icon-clock text-orange-600 dark:text-orange-400 text-2xl"></i>
+        </div>
       </div>
+      <h3 class="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Ожидается к оплате</h3>
+      <p class="text-4xl font-bold text-orange-600 dark:text-orange-400">${{ "%.2f"|format(expected_payments|sum(attribute='amount')) }}</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">{{ expected_payments|length }} платежей в ближайшие 30 дней</p>
+    </div>
+    {% else %}
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-100 dark:border-gray-700 hover:shadow-lg transition">
+      <div class="flex items-center justify-between mb-4">
+        <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+          <i class="icon-clock text-orange-600 dark:text-orange-400 text-2xl"></i>
+        </div>
+      </div>
+      <h3 class="text-gray-600 dark:text-gray-400 text-sm font-medium mb-1">Ожидается к оплате</h3>
+      <p class="text-4xl font-bold text-gray-500 dark:text-gray-400">$0.00</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Нет ожидаемых платежей</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Payment Reminders -->
+  {% if payment_reminders %}
+  <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-6 mb-8">
+    <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-2">⚠️ Напоминания об оплате</h3>
+    <div class="space-y-3">
+      {% for payment in payment_reminders %}
+      <div class="flex items-center justify-between bg-white dark:bg-gray-800 p-4 rounded-lg">
+        <div>
+          <p class="font-medium">{{ payment['client_name'] }}</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">{{ payment['project_title'] }} — ${{ "%.2f"|format(payment['amount']) }}</p>
+        </div>
+        <div class="text-right">
+          <p class="text-sm font-medium text-red-600 dark:text-red-400">Срок: {{ payment['due_date'] }}</p>
+        </div>
+      </div>
+      {% endfor %}
     </div>
   </div>
+  {% endif %}
 
   <!-- Upcoming Deadlines Section -->
   <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md border border-gray-100 dark:border-gray-700">

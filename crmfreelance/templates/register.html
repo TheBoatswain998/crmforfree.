@@ -37,6 +37,7 @@
       
       <!-- Register Form -->
       <form method="post" class="space-y-5">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <!-- Name -->
         <div>
           <label for="name" class="block text-sm font-medium text-gray-700 mb-2">

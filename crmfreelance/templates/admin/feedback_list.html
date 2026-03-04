@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Page Header -->
+  <div class="mb-8">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-4xl font-bold text-gray-900 dark:text-white">💬 Feedback Management</h1>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">View and respond to user feedback</p>
+      </div>
+      <a href="{{ url_for('admin') }}" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded font-medium">
+        ← Back to Admin
+      </a>
+    </div>
+  </div>
+
+  <!-- Filter Buttons -->
+  <div class="flex gap-2 mb-6">
+    <a href="{{ url_for('admin_feedback_list', status='all') }}" 
+       class="px-4 py-2 rounded font-medium transition {% if status == 'all' %}bg-orange-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600{% endif %}">
+      All ({{ total_feedback }})
+    </a>
+    <a href="{{ url_for('admin_feedback_list', status='new') }}" 
+       class="px-4 py-2 rounded font-medium transition {% if status == 'new' %}bg-red-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600{% endif %}">
+      New ({{ new_feedback }})
+    </a>
+    <a href="{{ url_for('admin_feedback_list', status='replied') }}" 
+       class="px-4 py-2 rounded font-medium transition {% if status == 'replied' %}bg-green-600 text-white{% else %}bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600{% endif %}">
+      Replied ({{ replied_feedback }})
+    </a>
+  </div>
+
+  <!-- Feedback List -->
+  <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
+    {% if feedback_list %}
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <tr>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">#</th>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">User</th>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">Message</th>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">Date</th>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">Status</th>
+              <th class="px-6 py-4 text-left font-semibold text-gray-700 dark:text-gray-300 text-sm">Action</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            {% for feedback_id, user_id, name, email, message, status, created_at in feedback_list %}
+            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm font-mono">{{ feedback_id }}</td>
+              <td class="px-6 py-4">
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-white">{{ name }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ email }}</p>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-gray-700 dark:text-gray-300 text-sm max-w-md">
+                <p class="truncate" title="{{ message }}">{{ message }}</p>
+              </td>
+              <td class="px-6 py-4 text-gray-600 dark:text-gray-400 text-sm whitespace-nowrap">
+                {{ created_at }}
+              </td>
+              <td class="px-6 py-4">
+                {% if status == 'new' %}
+                  <span class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-300 rounded-full text-xs font-medium">
+                    New
+                  </span>
+                {% elif status == 'replied' %}
+                  <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-300 rounded-full text-xs font-medium">
+                    Replied
+                  </span>
+                {% else %}
+                  <span class="px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300 rounded-full text-xs font-medium">
+                    {{ status }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="px-6 py-4">
+                <a href="{{ url_for('admin_feedback_detail', feedback_id=feedback_id) }}" 
+                   class="text-orange-600 hover:text-orange-700 dark:text-orange-500 dark:hover:text-orange-400 font-medium text-sm">
+                  View & Reply →
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      {% if total_pages > 1 %}
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-between items-center">
+        <div class="text-sm text-gray-600 dark:text-gray-400">
+          Page {{ page }} of {{ total_pages }}
+        </div>
+        <div class="flex gap-2">
+          {% if page > 1 %}
+            <a href="{{ url_for('admin_feedback_list', page=page-1, status=status) }}" 
+               class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded font-medium text-sm">
+              ← Prev
+            </a>
+          {% endif %}
+          
+          {% if page < total_pages %}
+            <a href="{{ url_for('admin_feedback_list', page=page+1, status=status) }}" 
+               class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 rounded font-medium text-sm">
+              Next →
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+    {% else %}
+      <div class="px-6 py-12 text-center">
+        <p class="text-gray-600 dark:text-gray-400 text-lg">
+          No feedback found. Keep checking for user messages!
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Info Box -->
+  <div class="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+    <p class="text-blue-900 dark:text-blue-300 text-sm">
+      <strong>💡 Tip:</strong> Click "View & Reply" to respond to any feedback. Users will be notified of your reply.
+    </p>
+  </div>
+</div>
+{% endblock %}

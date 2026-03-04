@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- Page Header -->
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900 dark:text-white">{{ t('settings') }}</h1>
+    <p class="text-gray-600 dark:text-gray-400 mt-1">Manage your preferences and connections</p>
+  </div>
+
+  <!-- Telegram Integration -->
+  <div class="bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 p-6 mb-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">{{ t('telegram_integration') }}</h2>
+    <p class="text-gray-600 dark:text-gray-400 mb-4">{{ t('telegram_description') }}</p>
+
+    <div class="bg-[#FAF9F6] dark:bg-gray-700/50 p-4 mb-4 border border-gray-200 dark:border-gray-600">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('your_telegram_code') }}</span>
+        {% if current_user.telegram_code %}
+          <div class="flex items-center gap-2">
+            <button onclick="copyToClipboard('{{ current_user.telegram_code }}')" class="btn-secondary text-sm">{{ t('copy_code') }}</button>
+            <button onclick="regenerateTelegramCode()" class="btn-secondary text-sm">{{ t('regenerate_code') }}</button>
+          </div>
+        {% else %}
+          <button onclick="generateTelegramCode()" class="btn-primary text-sm">{{ t('generate_code') }}</button>
+        {% endif %}
+      </div>
+
+      <div id="telegramCodeDisplay" class="text-2xl font-mono font-bold text-gray-900 dark:text-white tracking-wider">
+        {% if current_user.telegram_code %}{{ current_user.telegram_code }}{% endif %}
+      </div>
+    </div>
+
+    <div class="bg-[#FFF4E6] dark:bg-blue-900/20 border border-orange-200 dark:border-blue-800 p-4">
+      <h3 class="font-medium text-gray-900 dark:text-blue-300 mb-2">{{ t('how_to_connect') }}</h3>
+      <ol class="list-decimal list-inside text-sm text-gray-700 dark:text-blue-400 space-y-1">
+        <li>{{ t('telegram_step1') }}</li>
+        <li>{{ t('telegram_step2') }}</li>
+        <li>{{ t('telegram_step3') }}</li>
+        <li>{{ t('telegram_step4') }}</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- Appearance Settings -->
+  <div class="bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 p-6 mb-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">{{ t('appearance') }}</h2>
+
+    <div class="space-y-4">
+      <!-- Theme Selector -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('theme') }}</label>
+        <div class="flex gap-3">
+          <button @click="setTheme('light')" :class="theme === 'light' ? 'ring-2 ring-amber-300 bg-amber-50' : ''" class="theme-option px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-colors" data-theme="light">{{ t('light') }}</button>
+          <button @click="setTheme('dark')" :class="theme === 'dark' ? 'ring-2 ring-amber-300 bg-amber-50' : ''" class="theme-option px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-colors" data-theme="dark">{{ t('dark') }}</button>
+          <button @click="setTheme('system')" :class="theme === 'system' ? 'ring-2 ring-amber-300 bg-amber-50' : ''" class="theme-option px-4 py-2 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium transition-colors" data-theme="system">{{ t('system') }}</button>
+        </div>
+      </div>
+
+      <!-- Language Selector -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('language') }}</label>
+        <div class="flex gap-3">
+          <a href="/lang/en" class="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:border-orange-400 transition-colors">English</a>
+          <a href="/lang/ru" class="px-4 py-2 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium hover:border-orange-400 transition-colors">Русский</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Settings -->
+  <div class="bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 p-6 mb-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">{{ t('account_settings') }}</h2>
+
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('name') }}</label>
+        <input 
+          type="text" 
+          value="{{ current_user.name }}" 
+          disabled
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white bg-gray-50 dark:bg-gray-600"
+        >
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ t('email') }}</label>
+        <input 
+          type="email" 
+          value="{{ current_user.email }}" 
+          disabled
+          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white bg-gray-50 dark:bg-gray-600"
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Data & Privacy -->
+  <div class="bg-white dark:bg-gray-800 shadow-md border border-gray-100 dark:border-gray-700 p-6">
+    <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">{{ t('data_privacy') }}</h2>
+
+    <div class="space-y-4">
+      <div class="p-4 border border-gray-200 dark:border-gray-600">
+        <h3 class="font-medium text-gray-900 dark:text-white mb-2">{{ t('export_json') }}</h3>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ t('export_json_description') }}</p>
+        <button onclick="window.location.href='/api/export-json'" class="btn-primary text-sm">{{ t('export_json') }}</button>
+      </div>
+
+      <div class="p-4 border border-red-300 dark:border-red-900 bg-[#FEE2E2] dark:bg-red-900/10">
+        <h3 class="font-medium text-red-900 dark:text-red-300 mb-2">{{ t('delete_account') }}</h3>
+        <p class="text-sm text-red-700 dark:text-red-400 mb-3">{{ t('delete_account_description') }}</p>
+        <button onclick="showDeleteModal()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors">{{ t('delete_account') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal -->
+  <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+    <div class="bg-white dark:bg-gray-800 p-6 max-w-md w-full mx-4 border border-gray-300 dark:border-gray-600">
+      <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">{{ t('delete_account') }}</h3>
+      <p class="text-gray-700 dark:text-gray-300 mb-4 text-sm">{{ t('delete_account_confirm') }}</p>
+      <input type="text" id="deleteConfirmInput" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white mb-4" placeholder="DELETE">
+      <div class="flex gap-3 justify-end">
+        <button onclick="hideDeleteModal()" class="btn-secondary text-sm">{{ t('cancel') }}</button>
+        <button onclick="confirmDelete()" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold text-sm transition-colors">{{ t('delete') }}</button>
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function showToast(message, type = 'success') {
+  const toast = document.createElement('div');
+  toast.className = 'fixed bottom-4 right-4 z-50 px-4 py-3 shadow-lg font-medium rounded-lg';
+  toast.style.backgroundColor = type === 'success' ? '#10B981' : '#EF4444';
+  toast.style.color = 'white';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.3s';
+    setTimeout(() => { document.body.removeChild(toast); }, 300);
+  }, 2000);
+}
+
+function setTheme(theme) {
+  localStorage.setItem('theme', theme);
+  // notify the Alpine themeManager which will update `html` class and reactive state
+  try { window.dispatchEvent(new CustomEvent('theme-change', { detail: theme })); } catch(e) {}
+  updateThemeButtonStyles(theme);
+}
+
+function updateThemeButtonStyles(theme) {
+  document.querySelectorAll('.theme-option').forEach(btn => {
+    if (btn.dataset.theme === theme) {
+      btn.style.borderColor = '#FFA726';
+      btn.style.backgroundColor = '#FFF4E6';
+    } else {
+      btn.style.borderColor = '';
+      btn.style.backgroundColor = '';
+    }
+  });
+}
+
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied to clipboard!');
+  } catch (e) {
+    showToast('Failed to copy', 'error');
+  }
+}
+
+async function generateTelegramCode() {
+  try {
+    const res = await fetch('/api/telegram/generate', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const data = await res.json();
+    if (data.success) {
+      copyToClipboard(data.code);
+      updateTelegramUI(data.code);
+    } else {
+      showToast('Failed to generate code', 'error');
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+async function regenerateTelegramCode() {
+  try {
+    const res = await fetch('/api/telegram/regenerate', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+    const data = await res.json();
+    if (data.success) {
+      copyToClipboard(data.code);
+      updateTelegramUI(data.code);
+    } else {
+      showToast('Failed to regenerate code', 'error');
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+function updateTelegramUI(code) {
+  const display = document.getElementById('telegramCodeDisplay');
+  if (display) display.textContent = code;
+}
+
+function showDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function hideDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+async function confirmDelete() {
+  const conf = document.getElementById('deleteConfirmInput').value.trim();
+  if (conf !== 'DELETE') {
+    showToast('Invalid confirmation', 'error');
+    return;
+  }
+  try {
+    const res = await fetch('/api/delete-account', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirmation: conf }) });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Account deleted');
+      setTimeout(() => { window.location.href = '/'; }, 2000);
+    } else {
+      showToast(data.error || 'Failed to delete', 'error');
+    }
+  } catch (e) {
+    showToast('Error: ' + e.message, 'error');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  const savedTheme = localStorage.getItem('theme') || 'system';
+  // apply saved theme globally and update UI
+  setTheme(savedTheme);
+  updateThemeButtonStyles(savedTheme);
+
+  // keep buttons in sync when theme is changed elsewhere (header toggle)
+  window.addEventListener('theme-change', function(e){
+    try { updateThemeButtonStyles(e && e.detail ? e.detail : (localStorage.getItem('theme') || 'system')); } catch(e) {}
+  });
+});
+</script>
+{% endblock %}
