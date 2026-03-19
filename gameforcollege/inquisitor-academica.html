@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Инквизитор Ордо Академия — Warhammer 40,000</title>
+    <style>
+        /* ═══════════════════════════════════════════════════════════
+           DESIGN TOKENS — Warhammer 40K Theme
+           ═══════════════════════════════════════════════════════════ */
+        :root {
+            /* Colors */
+            --color-primary: #8B0000;           /* Dark Red */
+            --color-primary-light: #B22222;     /* Lighter Red */
+            --color-bg-main: #000000;           /* Pure Black */
+            --color-bg-terminal: #0a0a0a;       /* Slightly lighter black */
+            --color-text-primary: #cccccc;      /* Light Gray */
+            --color-text-dim: #888888;          /* Dimmed Gray */
+            --color-text-glow: #ff6b6b;         /* Red Glow */
+            --color-border: #8B0000;            /* Border Red */
+            --color-success: #2ecc71;           /* Success Green */
+            --color-error: #e74c3c;             /* Error Red */
+            --color-warning: #f39c12;           /* Warning Orange */
+            
+            /* Fonts */
+            --font-mono: 'Courier New', Courier, monospace;
+            --font-size-base: 16px;
+            --font-size-small: 14px;
+            --font-size-large: 20px;
+            --font-size-title: 28px;
+            
+            /* Spacing */
+            --space-xs: 8px;
+            --space-sm: 12px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            
+            /* Borders */
+            --border-radius: 4px;
+            --border-width: 2px;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           BASE STYLES
+           ═══════════════════════════════════════════════════════════ */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-mono);
+            font-size: var(--font-size-base);
+            background-color: var(--color-bg-main);
+            color: var(--color-text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════
+           LAYOUT
+           ═══════════════════════════════════════════════════════════ */
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--space-lg);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header with Stats */
+        .game-header {
+            border: var(--border-width) solid var(--color-border);
+            padding: var(--space-md);
+            margin-bottom: var(--space-lg);
+            background: linear-gradient(180deg, var(--color-bg-terminal) 0%, var(--color-bg-main) 100%);
+        }
+        
+        .game-title {
+            font-size: var(--font-size-title);
+            color: var(--color-primary-light);
+            text-align: center;
+            margin-bottom: var(--space-sm);
+            text-shadow: 0 0 10px var(--color-primary);
+            letter-spacing: 2px;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-md);
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .stat-label {
+            color: var(--color-text-dim);
+            font-size: var(--font-size-small);
+            margin-bottom: var(--space-xs);
+        }
+        
+        .progress-bar {
+            background: var(--color-bg-terminal);
+            border: 1px solid var(--color-border);
+            height: 20px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+            transition: width 0.5s ease;
+            box-shadow: 0 0 10px var(--color-primary);
+        }
+        
+        .progress-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-size-small);
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+        
+        .xp-display {
+            font-size: var(--font-size-large);
+            color: var(--color-warning);
+            text-shadow: 0 0 5px var(--color-warning);
+        }
+        
+        /* Main Game Area */
+        .game-main {
+            display: flex;
+            gap: var(--space-lg);
+            flex: 1;
+            margin-bottom: var(--space-lg);
+        }
+        
+        /* Character Portrait */
+        .character-portrait {
+            width: 300px;
+            flex-shrink: 0;
+        }
+        
+        .portrait-frame {
+            border: var(--border-width) solid var(--color-border);
+            padding: var(--space-sm);
+            background: var(--color-bg-terminal);
+            box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+        }
+        
+        .portrait-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #1a0000 0%, #330000 100%);
+            border: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-dim);
+            font-size: var(--font-size-small);
+            text-align: center;
+            padding: var(--space-md);
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .portrait-name {
+            text-align: center;
+            margin-top: var(--space-sm);
+            color: var(--color-primary-light);
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Terminal Window */
+        .terminal-window {
+            flex: 1;
+            border: var(--border-width) solid var(--color-border);
+            background: var(--color-bg-terminal);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 30px rgba(139, 0, 0, 0.3);
+        }
+        
+        .terminal-header {
+            padding: var(--space-sm);
+            border-bottom: var(--border-width) solid var(--color-border);
+            background: var(--color-primary);
+            color: var(--color-text-primary);
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 2px;
+        }
+        
+        .terminal-content {
+            padding: var(--space-lg);
+            flex: 1;
+            overflow-y: auto;
+            max-height: 500px;
+        }
+        
+        .terminal-text {
+            margin-bottom: var(--space-md);
+            line-height: 1.8;
+        }
+        
+        .dialogue-speaker {
+            color: var(--color-text-glow);
+            font-weight: bold;
+            margin-bottom: var(--space-xs);
+        }
+        
+        .dialogue-text {
+            color: var(--color-text-primary);
+            font-style: italic;
+            margin-bottom: var(--space-md);
+            padding-left: var(--space-md);
+            border-left: 2px solid var(--color-primary);
+        }
+        
+        .question-number {
+            color: var(--color-warning);
+            font-weight: bold;
+        }
+        
+        .question-text {
+            color: var(--color-text-primary);
+            margin-top: var(--space-sm);
+            white-space: pre-wrap;
+        }
+        
+        .answer-input {
+            width: 100%;
+            padding: var(--space-md);
+            background: var(--color-bg-main);
+            border: var(--border-width) solid var(--color-border);
+            color: var(--color-text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--font-size-base);
+            margin-top: var(--space-md);
+            border-radius: var(--border-radius);
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--color-primary-light);
+            box-shadow: 0 0 10px rgba(139, 0, 0, 0.5);
+        }
+        
+        /* Action Buttons */
+        .action-buttons {
+            padding: var(--space-lg);
+            border-top: var(--border-width) solid var(--color-border);
+            display: flex;
+            gap: var(--space-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: var(--space-md) var(--space-xl);
+            background: var(--color-bg-terminal);
+            border: var(--border-width) solid var(--color-border);
+            color: var(--color-text-primary);
+            font-family: var(--font-mono);
+            font-size: var(--font-size-base);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+        
+        .btn:hover:not(:disabled) {
+            background: var(--color-primary);
+            color: #fff;
+            box-shadow: 0 0 15px var(--color-primary);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: var(--color-primary);
+            color: #fff;
+        }
+        
+        .btn-success {
+            background: var(--color-success);
+            border-color: var(--color-success);
+            color: #fff;
+        }
+        
+        .btn-danger {
+            background: var(--color-error);
+            border-color: var(--color-error);
+            color: #fff;
+        }
+        
+        /* Feedback Messages */
+        .feedback {
+            padding: var(--space-md);
+            margin-top: var(--space-md);
+            border-radius: var(--border-radius);
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .feedback-success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 2px solid var(--color-success);
+            color: var(--color-success);
+        }
+        
+        .feedback-error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 2px solid var(--color-error);
+            color: var(--color-error);
+        }
+        
+        .feedback-warning {
+            background: rgba(243, 156, 18, 0.2);
+            border: 2px solid var(--color-warning);
+            color: var(--color-warning);
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--color-bg-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+            gap: var(--space-lg);
+        }
+        
+        .loading-text {
+            font-size: var(--font-size-large);
+            color: var(--color-primary-light);
+            text-shadow: 0 0 10px var(--color-primary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--color-border);
+            border-top-color: var(--color-primary-light);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-main {
+                flex-direction: column;
+            }
+            
+            .character-portrait {
+                width: 100%;
+            }
+            
+            .portrait-image {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">███ ИНИЦИАЛИЗАЦИЯ СИСТЕМЫ ОРДО АКАДЕМИЯ ███</div>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="gameContainer" class="game-container hidden">
+        <!-- Header with Stats -->
+        <div class="game-header">
+            <h1 class="game-title">║ ИНКВИЗИТОР ОРДО АКАДЕМИЯ ║</h1>
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-label">MENTAL INTEGRITY</div>
+                    <div class="progress-bar">
+                        <div id="mentalIntegrityFill" class="progress-fill" style="width: 100%"></div>
+                        <div id="mentalIntegrityText" class="progress-text">100%</div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">EXPERIENCE POINTS</div>
+                    <div class="xp-display">XP: <span id="xpValue">0</span></div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">PROGRESS</div>
+                    <div class="progress-bar">
+                        <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+                        <div id="progressText" class="progress-text">0 / 0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Game Area -->
+        <div class="game-main">
+            <!-- Character Portrait -->
+            <div class="character-portrait">
+                <div class="portrait-frame">
+                    <div id="characterImage" class="portrait-image">
+                        [ПОРТРЕТ ПЕРСОНАЖА]
+                    </div>
+                    <div id="characterName" class="portrait-name">Инквизитор</div>
+                </div>
+            </div>
+            
+            <!-- Terminal Window -->
+            <div class="terminal-window">
+                <div class="terminal-header">
+                    ═══ ТЕРМИНАЛ ИМПЕРИУМА ═══
+                </div>
+                <div id="terminalContent" class="terminal-content">
+                    <!-- Dynamic content will be inserted here -->
+                </div>
+                <div class="action-buttons">
+                    <button id="btnSubmit" class="btn btn-primary">ПОДТВЕРДИТЬ ОТВЕТ</button>
+                    <button id="btnNext" class="btn hidden">СЛЕДУЮЩИЙ ВОПРОС</button>
+                    <button id="btnReveal" class="btn">РАСКРЫТЬ ИСТИНУ</button>
+                    <button id="btnRestart" class="btn btn-danger">НАЧАТЬ ЗАНОВО</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════
+        // GAME STATE
+        // ═══════════════════════════════════════════════════════════
+        const GameState = {
+            questions: [],
+            currentQuestionIndex: 0,
+            xp: 0,
+            mentalIntegrity: 100,
+            answeredQuestions: [],
+            
+            save() {
+                localStorage.setItem('w40k_academica_save', JSON.stringify({
+                    currentQuestionIndex: this.currentQuestionIndex,
+                    xp: this.xp,
+                    mentalIntegrity: this.mentalIntegrity,
+                    answeredQuestions: this.answeredQuestions
+                }));
+            },
+            
+            load() {
+                const saved = localStorage.getItem('w40k_academica_save');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    this.currentQuestionIndex = data.currentQuestionIndex || 0;
+                    this.xp = data.xp || 0;
+                    this.mentalIntegrity = data.mentalIntegrity || 100;
+                    this.answeredQuestions = data.answeredQuestions || [];
+                }
+            },
+            
+            reset() {
+                this.currentQuestionIndex = 0;
+                this.xp = 0;
+                this.mentalIntegrity = 100;
+                this.answeredQuestions = [];
+                localStorage.removeItem('w40k_academica_save');
+            }
+        };
+        
+        // ═══════════════════════════════════════════════════════════
+        // CHARACTER PORTRAITS
+        // ═══════════════════════════════════════════════════════════
+        const Characters = {
+            inquisitor: {
+                name: 'ИНКВИЗИТОР',
+                image: 'img/inquisitor.svg',
+                dialogues: {
+                    intro: [
+                        'Приветствую, адепт. Твой разум будет испытан.',
+                        'Докажи свою верность Империуму через знание.',
+                        'Невежество — первая ступень к ереси.',
+                        'Император защищает знающих.'
+                    ],
+                    success: [
+                        'Твой разум чист. Император одобряет.',
+                        'Верно. Знание — твой доспех.',
+                        'Истина укрепляет твою веру.',
+                        'Правильно. Продолжай служение.'
+                    ],
+                    failure: [
+                        'Ересь проникает в твой разум...',
+                        'Неверно. Невежество опасно.',
+                        'Ошибка. Твоя целостность слабеет.',
+                        'Неправда. Сомнение — враг.'
+                    ]
+                }
+            },
+            techpriest: {
+                name: 'ТЕХНОЖРЕЦ',
+                image: 'img/techpriest.svg',
+                dialogues: {
+                    hint: [
+                        'Машинный дух шепчет подсказку...',
+                        'Логис-двигатель предлагает иной подход.',
+                        'Священные вычисления указывают путь.',
+                        'Омниссия дарует озарение.'
+                    ]
+                }
+            },
+            heretic: {
+                name: 'АРХИДЕМОН НЕВЕЖЕСТВА',
+                image: 'img/heretic.svg',
+                dialogues: {
+                    challenge: [
+                        'Твоё знание — ничто перед хаосом!',
+                        'Сдайся! Истина слишком сложна для смертных!',
+                        'Варп искажает твой разум!',
+                        'Твоя вера в математику тщетна!'
+                    ],
+                    defeat: [
+                        'Нет... Невозможно... Ты изгнал меня...',
+                        'Твоё знание... слишком сильно...',
+                        'Проклятье! Твой разум защищён!'
+                    ]
+                }
+            }
+        };
+        
+        // ═══════════════════════════════════════════════════════════
+        // QUESTION PARSER
+        // ═══════════════════════════════════════════════════════════
+        function parseQuestionsFromINI(iniText) {
+            const questions = [];
+            const sections = iniText.split('---').filter(s => s.trim());
+            
+            sections.forEach((section, index) => {
+                const lines = section.trim().split('\n');
+                let questionText = '';
+                let answerText = '';
+                let isAnswer = false;
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    
+                    if (line.startsWith('Вопрос')) {
+                        questionText = line;
+                    } else if (line === 'Ответ:') {
+                        isAnswer = true;
+                    } else if (line && !line.startsWith('Следующий блок') && !line.startsWith('Скажите')) {
+                        if (isAnswer) {
+                            answerText += line + '\n';
+                        } else if (questionText) {
+                            questionText += '\n' + line;
+                        }
+                    }
+                }
+                
+                if (questionText && answerText) {
+                    questions.push({
+                        id: index + 1,
+                        question: questionText.trim(),
+                        answer: answerText.trim()
+                    });
+                }
+            });
+            
+            return questions;
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // UI FUNCTIONS
+        // ═══════════════════════════════════════════════════════════
+        function updateStats() {
+            // Mental Integrity
+            const mentalPercent = Math.max(0, Math.min(100, GameState.mentalIntegrity));
+            document.getElementById('mentalIntegrityFill').style.width = mentalPercent + '%';
+            document.getElementById('mentalIntegrityText').textContent = mentalPercent + '%';
+            
+            // XP
+            document.getElementById('xpValue').textContent = GameState.xp;
+            
+            // Progress
+            const total = GameState.questions.length;
+            const current = GameState.currentQuestionIndex;
+            const progressPercent = total > 0 ? (current / total * 100) : 0;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+            document.getElementById('progressText').textContent = current + ' / ' + total;
+        }
+        
+        function setCharacter(characterKey) {
+            const character = Characters[characterKey];
+            const imageEl = document.getElementById('characterImage');
+            const nameEl = document.getElementById('characterName');
+            
+            imageEl.style.backgroundImage = `url(${character.image})`;
+            imageEl.textContent = '';
+            
+            // Fallback if image doesn't load
+            const img = new Image();
+            img.onerror = () => {
+                imageEl.style.backgroundImage = '';
+                imageEl.textContent = `[${character.name}]`;
+            };
+            img.src = character.image;
+            
+            nameEl.textContent = character.name;
+        }
+        
+        function getRandomElement(array) {
+            return array[Math.floor(Math.random() * array.length)];
+        }
+        
+        function displayQuestion() {
+            const question = GameState.questions[GameState.currentQuestionIndex];
+            if (!question) {
+                displayEndScreen();
+                return;
+            }
+            
+            // Random event check (boss or helper)
+            const isSpecialEvent = (GameState.currentQuestionIndex > 0) && 
+                                   (GameState.currentQuestionIndex % 5 === 0);
+            
+            let characterKey = 'inquisitor';
+            let dialogue = '';
+            
+            if (isSpecialEvent && Math.random() > 0.5) {
+                // Boss event
+                characterKey = 'heretic';
+                dialogue = getRandomElement(Characters.heretic.dialogues.challenge);
+            } else if (isSpecialEvent) {
+                // Helper event
+                characterKey = 'techpriest';
+                dialogue = getRandomElement(Characters.techpriest.dialogues.hint);
+            } else {
+                // Normal question
+                dialogue = getRandomElement(Characters.inquisitor.dialogues.intro);
+            }
+            
+            setCharacter(characterKey);
+            
+            const terminalContent = document.getElementById('terminalContent');
+            terminalContent.innerHTML = `
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ${Characters[characterKey].name}:</div>
+                    <div class="dialogue-text">«${dialogue}»</div>
+                </div>
+                <div class="terminal-text">
+                    <div class="question-number">ВОПРОС ${question.id}:</div>
+                    <div class="question-text">${question.question}</div>
+                </div>
+                <textarea id="answerInput" class="answer-input" placeholder="Введи свой ответ здесь..."></textarea>
+            `;
+            
+            // Reset buttons
+            document.getElementById('btnSubmit').classList.remove('hidden');
+            document.getElementById('btnNext').classList.add('hidden');
+            document.getElementById('answerInput').focus();
+            
+            updateStats();
+            GameState.save();
+        }
+        
+        function checkAnswer() {
+            const question = GameState.questions[GameState.currentQuestionIndex];
+            const userAnswer = document.getElementById('answerInput').value.trim();
+            
+            if (!userAnswer) {
+                alert('Введи ответ перед подтверждением!');
+                return;
+            }
+            
+            // For this educational tool, we'll show the correct answer
+            // Real checking would require more sophisticated comparison
+            const isCorrect = false; // User should compare themselves
+            
+            displayFeedback(question, userAnswer);
+        }
+        
+        function displayFeedback(question, userAnswer) {
+            const terminalContent = document.getElementById('terminalContent');
+            const currentCharacter = document.getElementById('characterName').textContent;
+            
+            // Show the correct answer
+            terminalContent.innerHTML = `
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ТВОЙ ОТВЕТ:</div>
+                    <div class="question-text">${userAnswer}</div>
+                </div>
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ПРАВИЛЬНЫЙ ОТВЕТ:</div>
+                    <div class="question-text">${question.answer}</div>
+                </div>
+                <div class="feedback feedback-warning">
+                    ⚠ Сравни свой ответ с истиной. Оцени сам свою верность Императору.
+                </div>
+                <div style="margin-top: var(--space-lg); display: flex; gap: var(--space-md); justify-content: center;">
+                    <button onclick="recordCorrect()" class="btn btn-success">МОЙ ОТВЕТ ВЕРЕН (+10 XP)</button>
+                    <button onclick="recordIncorrect()" class="btn btn-danger">Я ОШИБСЯ (-10 Integrity)</button>
+                </div>
+            `;
+            
+            document.getElementById('btnSubmit').classList.add('hidden');
+        }
+        
+        function recordCorrect() {
+            GameState.xp += 10;
+            const dialogue = getRandomElement(Characters.inquisitor.dialogues.success);
+            
+            showResultMessage(dialogue, 'success');
+            proceedToNext();
+        }
+        
+        function recordIncorrect() {
+            GameState.mentalIntegrity -= 10;
+            const dialogue = getRandomElement(Characters.inquisitor.dialogues.failure);
+            
+            showResultMessage(dialogue, 'error');
+            proceedToNext();
+        }
+        
+        function showResultMessage(message, type) {
+            const terminalContent = document.getElementById('terminalContent');
+            const feedbackClass = type === 'success' ? 'feedback-success' : 'feedback-error';
+            
+            terminalContent.innerHTML = `
+                <div class="feedback ${feedbackClass}">
+                    ${message}
+                </div>
+            `;
+            
+            updateStats();
+        }
+        
+        function proceedToNext() {
+            GameState.currentQuestionIndex++;
+            document.getElementById('btnNext').classList.remove('hidden');
+            
+            if (GameState.mentalIntegrity <= 0) {
+                setTimeout(() => displayGameOver(), 2000);
+            }
+        }
+        
+        function nextQuestion() {
+            setCharacter('inquisitor');
+            displayQuestion();
+        }
+        
+        function revealAnswer() {
+            const question = GameState.questions[GameState.currentQuestionIndex];
+            const terminalContent = document.getElementById('terminalContent');
+            
+            terminalContent.innerHTML = `
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ИНКВИЗИТОР:</div>
+                    <div class="dialogue-text">«Вот истина, которую ты искал...»</div>
+                </div>
+                <div class="terminal-text">
+                    <div class="question-number">ВОПРОС ${question.id}:</div>
+                    <div class="question-text">${question.question}</div>
+                </div>
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ОТВЕТ:</div>
+                    <div class="question-text">${question.answer}</div>
+                </div>
+                <div class="feedback feedback-warning">
+                    ⚠ Знание дано даром. Твоя целостность не изменена.
+                </div>
+            `;
+            
+            document.getElementById('btnSubmit').classList.add('hidden');
+            document.getElementById('btnNext').classList.remove('hidden');
+        }
+        
+        function displayGameOver() {
+            const terminalContent = document.getElementById('terminalContent');
+            setCharacter('heretic');
+            
+            terminalContent.innerHTML = `
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► АРХИДЕМОН НЕВЕЖЕСТВА:</div>
+                    <div class="dialogue-text">«ТВОЙ РАЗУМ СЛОМЛЕН! НЕВЕЖЕСТВО ПОГЛОТИЛО ТЕБЯ!»</div>
+                </div>
+                <div class="feedback feedback-error" style="font-size: var(--font-size-large);">
+                    ═══ ИГРА ОКОНЧЕНА ═══<br>
+                    Твоя ментальная целостность достигла нуля.<br>
+                    XP набрано: ${GameState.xp}
+                </div>
+            `;
+            
+            document.getElementById('btnSubmit').classList.add('hidden');
+            document.getElementById('btnNext').classList.add('hidden');
+            document.getElementById('btnReveal').classList.add('hidden');
+        }
+        
+        function displayEndScreen() {
+            const terminalContent = document.getElementById('terminalContent');
+            setCharacter('inquisitor');
+            
+            const finalIntegrity = GameState.mentalIntegrity;
+            let rank = '';
+            let message = '';
+            
+            if (finalIntegrity >= 80) {
+                rank = 'ИНКВИЗИТОР-МАГИСТР';
+                message = 'Твоё знание безупречно. Император гордится тобой.';
+            } else if (finalIntegrity >= 50) {
+                rank = 'ИНКВИЗИТОР';
+                message = 'Ты достоин звания слуги Императора.';
+            } else if (finalIntegrity >= 20) {
+                rank = 'АДЕПТ';
+                message = 'Твой путь тернист, но ты выстоял.';
+            } else {
+                rank = 'ПОСЛУШНИК';
+                message = 'Тебе нужно больше учиться.';
+            }
+            
+            terminalContent.innerHTML = `
+                <div class="terminal-text">
+                    <div class="dialogue-speaker">► ИНКВИЗИТОР:</div>
+                    <div class="dialogue-text">«${message}»</div>
+                </div>
+                <div class="feedback feedback-success" style="font-size: var(--font-size-large);">
+                    ═══ ИСПЫТАНИЕ ЗАВЕРШЕНО ═══<br><br>
+                    ФИНАЛЬНЫЙ РАНГ: ${rank}<br>
+                    ОПЫТ: ${GameState.xp} XP<br>
+                    МЕНТАЛЬНАЯ ЦЕЛОСТНОСТЬ: ${finalIntegrity}%<br>
+                    ВОПРОСОВ ПРОЙДЕНО: ${GameState.questions.length}
+                </div>
+            `;
+            
+            document.getElementById('btnSubmit').classList.add('hidden');
+            document.getElementById('btnNext').classList.add('hidden');
+            document.getElementById('btnReveal').classList.add('hidden');
+        }
+        
+        function restartGame() {
+            if (confirm('Начать новую игру? Весь прогресс будет потерян.')) {
+                GameState.reset();
+                GameState.load();
+                displayQuestion();
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // INITIALIZATION
+        // ═══════════════════════════════════════════════════════════
+        async function loadQuestionsFromFile() {
+            try {
+                const response = await fetch('college.ini');
+                if (!response.ok) {
+                    throw new Error('Не удалось загрузить файл college.ini');
+                }
+                const text = await response.text();
+                return parseQuestionsFromINI(text);
+            } catch (error) {
+                console.error('Ошибка загрузки вопросов:', error);
+                alert('КРИТИЧЕСКАЯ ОШИБКА: Не удалось загрузить базу знаний (college.ini).\n\n' +
+                      'Убедись, что файл college.ini находится в той же папке, что и HTML-файл.\n\n' +
+                      'Для работы через file:// протокол открой HTML в браузере, ' +
+                      'который поддерживает локальные запросы (например, Firefox), ' +
+                      'или используй локальный веб-сервер.');
+                return [];
+            }
+        }
+        
+        async function initGame() {
+            // Load questions
+            GameState.questions = await loadQuestionsFromFile();
+            
+            if (GameState.questions.length === 0) {
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div style="text-align: center; padding: var(--space-xl); max-width: 600px;">
+                        <div style="color: var(--color-error); font-size: var(--font-size-large); margin-bottom: var(--space-lg);">
+                            ⚠ ОШИБКА ЗАГРУЗКИ
+                        </div>
+                        <div style="line-height: 1.8;">
+                            Файл college.ini не найден или пуст.<br><br>
+                            Убедись, что:<br>
+                            1. Файл college.ini находится в той же папке<br>
+                            2. Файл имеет правильный формат<br>
+                            3. Используется браузер с поддержкой локальных файлов<br><br>
+                            <strong>Рекомендация:</strong> Используй локальный сервер<br>
+                            (например: python -m http.server)
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Load saved progress
+            GameState.load();
+            
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('gameContainer').classList.remove('hidden');
+                displayQuestion();
+            }, 1500);
+        }
+        
+        // Event Listeners
+        document.getElementById('btnSubmit').addEventListener('click', checkAnswer);
+        document.getElementById('btnNext').addEventListener('click', nextQuestion);
+        document.getElementById('btnReveal').addEventListener('click', revealAnswer);
+        document.getElementById('btnRestart').addEventListener('click', restartGame);
+        
+        // Start game
+        initGame();
+    </script>
+</body>
+</html>

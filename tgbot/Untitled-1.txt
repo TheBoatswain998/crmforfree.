@@ -1,0 +1,2 @@
+REMOVED — credentials moved to `.env`.
+Delete this file or keep it empty to avoid leaking secrets.
